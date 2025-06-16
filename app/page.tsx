@@ -20,7 +20,7 @@ export default function LandingPage() {
           >
             <div className="mb-6">
               <h1 className="text-5xl md:text-6xl font-bold mb-4">
-                ribit
+                Ribit
               </h1>
               <p className="text-xl md:text-2xl font-light opacity-90">
                 Affordable, safe ridesharing for university travel
@@ -256,7 +256,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-8 bg-gray-900 text-white">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-xl font-bold mb-2">ribit</p>
+          <p className="text-xl font-bold mb-2">Ribit</p>
           <p className="text-gray-400 text-sm">
             Community-based ridesharing for affordable medium-distance travel
           </p>
