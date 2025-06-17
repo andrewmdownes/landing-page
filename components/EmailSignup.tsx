@@ -39,13 +39,6 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
       return
     }
 
-    // Check for .edu email (optional - remove if you want to allow all emails)
-    if (!email.toLowerCase().endsWith('.edu')) {
-      setError('Please use your university (.edu) email address')
-      setIsSubmitting(false)
-      return
-    }
-
     try {
       const { data, error: supabaseError } = await signupToWaitlist(email)
       
@@ -81,21 +74,21 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
       <div className={`
         max-w-md mx-auto p-6 rounded-2xl text-center
         ${isWhiteVariant 
-          ? 'bg-white/10 backdrop-blur-sm border border-white/20' 
-          : 'bg-[#5DBE62]/10 border border-[#5DBE62]/20'
+          ? 'bg-white/20 backdrop-blur-sm border border-white/30' 
+          : 'bg-white/20 backdrop-blur-sm border border-white/30'
         }
       `}>
         <div className={`
           w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4
-          ${isWhiteVariant ? 'bg-white/20' : 'bg-[#5DBE62]/20'}
+          ${isWhiteVariant ? 'bg-white/30' : 'bg-white/30'}
         `}>
-          <Check className={`h-8 w-8 ${isWhiteVariant ? 'text-white' : 'text-[#5DBE62]'}`} />
+          <Check className="h-8 w-8 text-white" />
         </div>
-        <h3 className={`text-xl font-bold mb-2 ${isWhiteVariant ? 'text-white' : 'text-gray-900'}`}>
+        <h3 className="text-xl font-bold mb-2 text-white">
           You're on the list! 🎉
         </h3>
-        <p className={`${isWhiteVariant ? 'text-white/80' : 'text-gray-600'}`}>
-          We'll notify you as soon as Ribit launches at your university.
+        <p className="text-white/90">
+          We'll notify you as soon as Ribit launches. Stay tuned!
         </p>
       </div>
     )
@@ -117,7 +110,7 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
           <div className="flex-1">
             <input
               type="email"
-              placeholder="your.name@university.edu"
+              placeholder="your.email@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
@@ -125,9 +118,10 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
                 w-full px-4 py-3 rounded-lg border-2 text-gray-900 placeholder-gray-500
                 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all
                 disabled:opacity-50 disabled:cursor-not-allowed
+                bg-white shadow-lg
                 ${error 
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                  : 'border-gray-200 focus:border-[#5DBE62] focus:ring-[#5DBE62]'
+                  : 'border-gray-200 focus:border-[#7FB069] focus:ring-[#7FB069]'
                 }
               `}
               required
@@ -144,9 +138,10 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
               px-6 py-3 rounded-lg font-semibold text-center transition-all
               flex items-center justify-center gap-2 min-w-[140px]
               disabled:opacity-50 disabled:cursor-not-allowed
+              shadow-lg
               ${isWhiteVariant
-                ? 'bg-white text-[#5DBE62] hover:bg-gray-100'
-                : 'bg-[#5DBE62] text-white hover:bg-[#4CAF50]'
+                ? 'bg-white text-[#7FB069] hover:bg-gray-100'
+                : 'bg-white text-[#7FB069] hover:bg-gray-100'
               }
             `}
           >
@@ -167,7 +162,7 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
               initial: { opacity: 0, y: -10 },
               animate: { opacity: 1, y: 0 }
             } : {})}
-            className="flex items-center gap-2 text-red-600 text-sm"
+            className="flex items-center gap-2 text-red-100 text-sm bg-red-500/20 backdrop-blur-sm rounded-lg p-3"
           >
             <AlertCircle className="h-4 w-4" />
             {error}
@@ -175,7 +170,7 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
         )}
       </form>
 
-      <p className={`text-xs mt-3 text-center ${isWhiteVariant ? 'text-white/70' : 'text-gray-500'}`}>
+      <p className="text-xs mt-3 text-center text-white/80">
         Join thousands of students already signed up. No spam, ever.
       </p>
     </div>
