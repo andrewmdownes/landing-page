@@ -40,7 +40,7 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
     }
 
     try {
-      const { data, error: supabaseError } = await signupToWaitlist(email)
+      const { error: supabaseError } = await signupToWaitlist(email)
       
       if (supabaseError) {
         if (supabaseError.code === '23505') { // Unique constraint violation
@@ -53,8 +53,8 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
         setIsSuccess(true)
         setEmail('')
         // Optional: Track conversion event
-        if (isMounted && typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'sign_up', {
+        if (isMounted && typeof window !== 'undefined' && (window as unknown as { gtag?: Function }).gtag) {
+          ((window as unknown as { gtag: Function }).gtag)('event', 'sign_up', {
             method: 'email',
             value: 1
           })
@@ -85,10 +85,10 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
           <Check className="h-8 w-8 text-white" />
         </div>
         <h3 className="text-xl font-bold mb-2 text-white">
-          You're on the list! 🎉
+          You&apos;re on the list! 🎉
         </h3>
         <p className="text-white/90">
-          We'll notify you as soon as Ribit launches. Stay tuned!
+          We&apos;ll notify you as soon as Ribit launches at your university.
         </p>
       </div>
     )

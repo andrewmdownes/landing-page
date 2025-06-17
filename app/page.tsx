@@ -1,9 +1,8 @@
 // app/page.tsx
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Shield, Users, Clock, DollarSign, ArrowRight, Car, MapPin } from 'lucide-react'
+import { Shield, Users, Clock, DollarSign, Car, MapPin } from 'lucide-react'
 import EmailSignup from '../components/EmailSignup'
 
 export default function LandingPage() {
@@ -74,7 +73,7 @@ export default function LandingPage() {
                 Perfect for Spring Break, Holidays & Campus Events
               </h2>
               <p className="text-lg md:text-xl opacity-90 max-w-3xl mx-auto">
-                Join the verified university community that's already planning rides for 
+                Join the verified university community that&apos;s already planning rides for 
                 the moments that matter most.
               </p>
             </motion.div>
@@ -258,8 +257,8 @@ export default function LandingPage() {
                 Peak Travel Times = Peak Savings
               </h3>
               <p className="text-gray-600">
-                When everyone's heading the same direction, traditional rideshare prices spike. 
-                Ribit's community approach means consistent, affordable pricing when you need it most.
+                When everyone&apos;s heading the same direction, traditional rideshare prices spike. 
+                Ribit&apos;s community approach means consistent, affordable pricing when you need it most.
               </p>
               <div className="grid md:grid-cols-3 gap-4 mt-6 text-sm">
                 <div className="flex items-center justify-center gap-2 text-gray-700">
