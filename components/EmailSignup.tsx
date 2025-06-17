@@ -176,7 +176,7 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
       </form>
 
       <p className="text-xs mt-3 text-center text-white/80">
-        Join thousands of students already signed up. No spam, ever.
+        No spam, ever.
       </p>
     </div>
   )

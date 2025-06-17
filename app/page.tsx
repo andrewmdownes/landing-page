@@ -362,7 +362,7 @@ export default function LandingPage() {
                 Ready to Save on Your Next Trip?
               </h2>
               <p className="text-lg md:text-xl mb-8 text-white/95">
-                Join thousands of university students who are already saving money and traveling safely with Ribit.
+                
               </p>
               <EmailSignup variant="white" />
             </div>
