@@ -53,11 +53,16 @@ export default function EmailSignup({ variant = 'default' }: EmailSignupProps) {
         setIsSuccess(true)
         setEmail('')
         // Optional: Track conversion event
-        if (isMounted && typeof window !== 'undefined' && (window as unknown as { gtag?: Function }).gtag) {
-          ((window as unknown as { gtag: Function }).gtag)('event', 'sign_up', {
-            method: 'email',
-            value: 1
-          })
+        if (isMounted && typeof window !== 'undefined') {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+          const gtag = (window as unknown as { gtag?: Function }).gtag
+          if (gtag) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+            (gtag as Function)('event', 'sign_up', {
+              method: 'email',
+              value: 1
+            })
+          }
         }
       }
     } catch (err) {
