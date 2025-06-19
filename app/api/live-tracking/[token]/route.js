@@ -26,7 +26,7 @@ async function fetchSupabase(endpoint, options = {}) {
   return response.json()
 }
 
-export async function GET(request, { params }) {
+export async function GET(_request, { params }) {
   try {
     const { token } = params
     
@@ -115,7 +115,7 @@ export async function GET(request, { params }) {
 }
 
 // Add CORS headers for public access
-export async function OPTIONS(request) {
+export async function OPTIONS(_request) {
   return new Response(null, {
     status: 200,
     headers: {
