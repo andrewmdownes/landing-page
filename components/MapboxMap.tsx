@@ -25,8 +25,8 @@ interface MapboxMapProps {
   dropoffLocation?: Location
 }
 
-// Set your Mapbox access token
-const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoicmlidXRhcHAiLCJhIjoiY2x0ZXh4eHh4eDAwMTNkcGNjY2NjY2NjYyJ9.xxxxxxxxxxxxxxxxxxxxxxxxx'
+// Set your Mapbox access token - we'll debug this
+const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
 
 export default function MapboxMap({ 
   coordinates, 
@@ -40,16 +40,49 @@ export default function MapboxMap({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string[]>([])
 
-  // Set Mapbox access token
-  useEffect(() => {
-    mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
+  // Debug function to log information
+  const addDebugInfo = useCallback((info: string) => {
+    console.log(`🐛 Debug: ${info}`)
+    setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${info}`])
   }, [])
 
   // Ensure component is mounted client-side
   useEffect(() => {
     setMounted(true)
-  }, [])
+    addDebugInfo('Component mounted')
+  }, [addDebugInfo])
+
+  // Check access token on mount
+  useEffect(() => {
+    if (mounted) {
+      addDebugInfo(`Access token: ${MAPBOX_ACCESS_TOKEN ? `${MAPBOX_ACCESS_TOKEN.slice(0, 10)}...` : 'MISSING'}`)
+      
+      if (!MAPBOX_ACCESS_TOKEN) {
+        setError('Mapbox access token is missing. Please add NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN to your environment variables.')
+        setIsLoading(false)
+        return
+      }
+
+      if (MAPBOX_ACCESS_TOKEN.includes('xxxxxxxxx')) {
+        setError('Mapbox access token appears to be a placeholder. Please set a real token.')
+        setIsLoading(false)
+        return
+      }
+
+      // Set the access token
+      try {
+        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
+        addDebugInfo('Access token set successfully')
+      } catch (err) {
+        addDebugInfo(`Failed to set access token: ${err}`)
+        setError('Failed to set Mapbox access token')
+        setIsLoading(false)
+        return
+      }
+    }
+  }, [mounted, addDebugInfo])
 
   // Clear existing markers
   const clearMarkers = useCallback(() => {
@@ -59,7 +92,7 @@ export default function MapboxMap({
 
   // Add markers and route to map
   const addMapContent = useCallback((map: mapboxgl.Map) => {
-    console.log('🔄 Adding map content...')
+    addDebugInfo('Adding map content...')
     
     // Clear existing markers
     clearMarkers()
@@ -69,205 +102,197 @@ export default function MapboxMap({
 
     // Add pickup marker
     if (pickupLocation?.latitude && pickupLocation?.longitude) {
-      const pickupMarker = new mapboxgl.Marker({
-        color: '#5DBE62',
-        scale: 0.8
-      })
-        .setLngLat([parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
-          <div class="font-semibold">Pickup Location</div>
-          <div class="text-sm">${pickupLocation.name}</div>
-          <div class="text-xs text-gray-600">${pickupLocation.address}</div>
-        `))
-        .addTo(map)
-      
-      markersRef.current.push(pickupMarker)
-      bounds.extend([parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)])
-      hasValidCoordinates = true
+      try {
+        const pickupMarker = new mapboxgl.Marker({
+          color: '#5DBE62',
+          scale: 0.8
+        })
+          .setLngLat([parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)])
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="font-semibold">Pickup Location</div>
+            <div class="text-sm">${pickupLocation.name}</div>
+            <div class="text-xs text-gray-600">${pickupLocation.address}</div>
+          `))
+          .addTo(map)
+        
+        markersRef.current.push(pickupMarker)
+        bounds.extend([parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)])
+        hasValidCoordinates = true
+        addDebugInfo('Pickup marker added')
+      } catch (err) {
+        addDebugInfo(`Failed to add pickup marker: ${err}`)
+      }
     }
 
     // Add dropoff marker
     if (dropoffLocation?.latitude && dropoffLocation?.longitude) {
-      const dropoffMarker = new mapboxgl.Marker({
-        color: '#ff6b6b',
-        scale: 0.8
-      })
-        .setLngLat([parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
-          <div class="font-semibold">Dropoff Location</div>
-          <div class="text-sm">${dropoffLocation.name}</div>
-          <div class="text-xs text-gray-600">${dropoffLocation.address}</div>
-        `))
-        .addTo(map)
-      
-      markersRef.current.push(dropoffMarker)
-      bounds.extend([parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)])
-      hasValidCoordinates = true
+      try {
+        const dropoffMarker = new mapboxgl.Marker({
+          color: '#ff6b6b',
+          scale: 0.8
+        })
+          .setLngLat([parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)])
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="font-semibold">Dropoff Location</div>
+            <div class="text-sm">${dropoffLocation.name}</div>
+            <div class="text-xs text-gray-600">${dropoffLocation.address}</div>
+          `))
+          .addTo(map)
+        
+        markersRef.current.push(dropoffMarker)
+        bounds.extend([parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)])
+        hasValidCoordinates = true
+        addDebugInfo('Dropoff marker added')
+      } catch (err) {
+        addDebugInfo(`Failed to add dropoff marker: ${err}`)
+      }
     }
 
     // Add current location marker
     if (currentLocation) {
-      // Create custom element for pulsing current location
-      const currentLocationEl = document.createElement('div')
-      currentLocationEl.className = 'current-location-marker'
-      currentLocationEl.style.cssText = `
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #007AFF;
-        border: 3px solid white;
-        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
-        animation: pulse 2s infinite;
-      `
+      try {
+        // Create custom element for pulsing current location
+        const currentLocationEl = document.createElement('div')
+        currentLocationEl.className = 'current-location-marker'
+        currentLocationEl.style.cssText = `
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #007AFF;
+          border: 3px solid white;
+          box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+          animation: pulse 2s infinite;
+        `
 
-      const currentMarker = new mapboxgl.Marker({
-        element: currentLocationEl,
-        anchor: 'center'
-      })
-        .setLngLat([currentLocation.longitude, currentLocation.latitude])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
-          <div class="font-semibold">Current Location</div>
-          <div class="text-xs text-gray-600">Last updated: ${new Date(currentLocation.timestamp).toLocaleTimeString()}</div>
-        `))
-        .addTo(map)
-      
-      markersRef.current.push(currentMarker)
-      bounds.extend([currentLocation.longitude, currentLocation.latitude])
-      hasValidCoordinates = true
+        const currentMarker = new mapboxgl.Marker({
+          element: currentLocationEl,
+          anchor: 'center'
+        })
+          .setLngLat([currentLocation.longitude, currentLocation.latitude])
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            <div class="font-semibold">Current Location</div>
+            <div class="text-xs text-gray-600">Last updated: ${new Date(currentLocation.timestamp).toLocaleTimeString()}</div>
+          `))
+          .addTo(map)
+        
+        markersRef.current.push(currentMarker)
+        bounds.extend([currentLocation.longitude, currentLocation.latitude])
+        hasValidCoordinates = true
+        addDebugInfo('Current location marker added')
+      } catch (err) {
+        addDebugInfo(`Failed to add current location marker: ${err}`)
+      }
     }
 
     // Add route line if we have coordinates
     if (coordinates.length > 1) {
-      const routeCoordinates = coordinates.map(coord => [coord.longitude, coord.latitude])
-      
-      // Remove existing route if it exists
-      if (map.getSource('route')) {
-        map.removeLayer('route')
-        map.removeSource('route')
-      }
+      try {
+        const routeCoordinates = coordinates.map(coord => [coord.longitude, coord.latitude])
+        
+        // Remove existing route if it exists
+        if (map.getSource('route')) {
+          map.removeLayer('route')
+          map.removeSource('route')
+        }
 
-      // Add route source and layer
-      map.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: routeCoordinates
+        // Add route source and layer
+        map.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: routeCoordinates
+            }
           }
-        }
-      })
+        })
 
-      map.addLayer({
-        id: 'route',
-        type: 'line',
-        source: 'route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#5DBE62',
-          'line-width': 4,
-          'line-opacity': 0.8
-        }
-      })
-
-      // Extend bounds to include all coordinates
-      coordinates.forEach(coord => {
-        bounds.extend([coord.longitude, coord.latitude])
-      })
-      hasValidCoordinates = true
-    }
-
-    // Add connection line between pickup and dropoff if both exist
-    if (pickupLocation?.latitude && pickupLocation?.longitude && 
-        dropoffLocation?.latitude && dropoffLocation?.longitude) {
-      
-      // Remove existing connection line if it exists
-      if (map.getSource('connection-line')) {
-        map.removeLayer('connection-line')
-        map.removeSource('connection-line')
-      }
-
-      map.addSource('connection-line', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)],
-              [parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)]
-            ]
+        map.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#5DBE62',
+            'line-width': 4,
+            'line-opacity': 0.8
           }
-        }
-      })
+        })
 
-      map.addLayer({
-        id: 'connection-line',
-        type: 'line',
-        source: 'connection-line',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#94a3b8',
-          'line-width': 2,
-          'line-opacity': 0.6,
-          'line-dasharray': [2, 2]
-        }
-      })
+        // Extend bounds to include all coordinates
+        coordinates.forEach(coord => {
+          bounds.extend([coord.longitude, coord.latitude])
+        })
+        hasValidCoordinates = true
+        addDebugInfo(`Route line added with ${coordinates.length} points`)
+      } catch (err) {
+        addDebugInfo(`Failed to add route line: ${err}`)
+      }
     }
 
     // Fit bounds if we have valid coordinates
     if (hasValidCoordinates && !bounds.isEmpty()) {
-      map.fitBounds(bounds, {
-        padding: 50,
-        maxZoom: 15
-      })
+      try {
+        map.fitBounds(bounds, {
+          padding: 50,
+          maxZoom: 15
+        })
+        addDebugInfo('Map bounds fitted')
+      } catch (err) {
+        addDebugInfo(`Failed to fit bounds: ${err}`)
+      }
     }
 
-    console.log('✅ Map content added')
-  }, [coordinates, currentLocation, pickupLocation, dropoffLocation, clearMarkers])
+    addDebugInfo('Map content completed')
+  }, [coordinates, currentLocation, pickupLocation, dropoffLocation, clearMarkers, addDebugInfo])
 
   // Initialize map
   const initializeMap = useCallback(async () => {
     if (!mounted || !mapRef.current) {
-      console.log('⏳ Component not ready yet, waiting...')
+      addDebugInfo('Not ready - waiting for mount/container')
+      return
+    }
+
+    if (!MAPBOX_ACCESS_TOKEN || MAPBOX_ACCESS_TOKEN.includes('xxxxxxxxx')) {
+      addDebugInfo('Invalid access token detected')
+      setError('Please set a valid Mapbox access token in your environment variables')
+      setIsLoading(false)
       return
     }
 
     try {
-      console.log('🗺️ Starting Mapbox initialization...')
+      addDebugInfo('Starting map initialization...')
       
-      if (!MAPBOX_ACCESS_TOKEN || MAPBOX_ACCESS_TOKEN.includes('xxxxxxxxx')) {
-        throw new Error('Mapbox access token is missing or invalid')
+      // Check container dimensions
+      const containerRect = mapRef.current.getBoundingClientRect()
+      addDebugInfo(`Container size: ${containerRect.width}x${containerRect.height}`)
+      
+      if (containerRect.width === 0 || containerRect.height === 0) {
+        throw new Error('Container has zero dimensions')
       }
-
-      console.log('📐 Container dimensions:', {
-        width: mapRef.current.offsetWidth,
-        height: mapRef.current.offsetHeight,
-      })
 
       // Determine center
       let center: [number, number] = [-81.3792, 28.5383] // Default to Orlando
       
       if (currentLocation) {
         center = [currentLocation.longitude, currentLocation.latitude]
+        addDebugInfo(`Using current location as center: ${center}`)
       } else if (pickupLocation?.latitude && pickupLocation?.longitude) {
         center = [parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)]
+        addDebugInfo(`Using pickup location as center: ${center}`)
+      } else {
+        addDebugInfo(`Using default center: ${center}`)
       }
 
-      console.log('📍 Map center:', center)
-
       // Create map
+      addDebugInfo('Creating Mapbox map instance...')
       const map = new mapboxgl.Map({
         container: mapRef.current,
-        style: 'mapbox://styles/mapbox/streets-v12', // You can change this to other styles
+        style: 'mapbox://styles/mapbox/streets-v12',
         center,
         zoom: 10,
         attributionControl: false
@@ -276,9 +301,9 @@ export default function MapboxMap({
       // Add navigation controls
       map.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
-      // Wait for map to load
+      // Set up event listeners
       map.on('load', () => {
-        console.log('✅ Mapbox map loaded successfully')
+        addDebugInfo('Map load event fired')
         mapInstanceRef.current = map
         addMapContent(map)
         setError(null)
@@ -286,43 +311,58 @@ export default function MapboxMap({
       })
 
       map.on('error', (e) => {
-        console.error('💥 Mapbox error:', e)
-        setError('Map failed to load')
+        addDebugInfo(`Map error: ${e.error?.message || 'Unknown error'}`)
+        setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })
 
+      // Timeout fallback
+      setTimeout(() => {
+        if (isLoading) {
+          addDebugInfo('Map load timeout - forcing completion')
+          if (map && !mapInstanceRef.current) {
+            mapInstanceRef.current = map
+            addMapContent(map)
+            setError(null)
+            setIsLoading(false)
+          }
+        }
+      }, 10000) // 10 second timeout
+
     } catch (err) {
-      console.error('💥 Map initialization failed:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      addDebugInfo(`Initialization error: ${err}`)
+      setError(err instanceof Error ? err.message : 'Unknown initialization error')
       setIsLoading(false)
     }
-  }, [mounted, currentLocation, pickupLocation, dropoffLocation, addMapContent])
+  }, [mounted, currentLocation, pickupLocation, dropoffLocation, addMapContent, addDebugInfo, isLoading])
 
   // Initialize when mounted
   useEffect(() => {
     if (!mounted) return
 
-    console.log('🚀 Component mounted, initializing map...')
+    addDebugInfo('Component ready - starting initialization')
     
     const timer = setTimeout(() => {
       initializeMap()
-    }, 100)
+    }, 500)
 
     return () => {
       clearTimeout(timer)
       if (mapInstanceRef.current) {
+        addDebugInfo('Cleaning up map instance')
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }
     }
-  }, [mounted, initializeMap])
+  }, [mounted, initializeMap, addDebugInfo])
 
   // Update content when data changes
   useEffect(() => {
     if (mapInstanceRef.current && !isLoading) {
+      addDebugInfo('Updating map content due to data change')
       addMapContent(mapInstanceRef.current)
     }
-  }, [coordinates, currentLocation, pickupLocation, dropoffLocation, isLoading, addMapContent])
+  }, [coordinates, currentLocation, pickupLocation, dropoffLocation, isLoading, addMapContent, addDebugInfo])
 
   // Don't render anything until mounted (prevents hydration issues)
   if (!mounted) {
@@ -340,8 +380,21 @@ export default function MapboxMap({
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5DBE62] mx-auto mb-2"></div>
-          <p className="text-gray-600 text-sm">Loading Mapbox...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5DBE62] mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm mb-4">Loading Mapbox...</p>
+          
+          {/* Debug info */}
+          <div className="bg-gray-50 rounded p-3 text-xs text-left max-w-sm">
+            <div className="font-semibold mb-2">Debug Info:</div>
+            {debugInfo.map((info, idx) => (
+              <div key={idx} className="text-gray-600">{info}</div>
+            ))}
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div>Token: {MAPBOX_ACCESS_TOKEN ? '✅ Present' : '❌ Missing'}</div>
+              <div>Container: {mapRef.current ? '✅ Found' : '❌ Missing'}</div>
+              <div>Mounted: {mounted ? '✅ Yes' : '❌ No'}</div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -353,10 +406,20 @@ export default function MapboxMap({
         <div className="text-center p-6">
           <div className="text-red-500 text-xl mb-2">⚠️</div>
           <p className="text-red-600 text-sm mb-4">{error}</p>
+          
+          {/* Debug info for error state */}
+          <div className="bg-red-50 rounded p-3 text-xs text-left mb-4">
+            <div className="font-semibold mb-2 text-red-800">Debug Info:</div>
+            {debugInfo.map((info, idx) => (
+              <div key={idx} className="text-red-700">{info}</div>
+            ))}
+          </div>
+          
           <button
             onClick={() => {
               setError(null)
               setIsLoading(true)
+              setDebugInfo([])
               setTimeout(initializeMap, 100)
             }}
             className="bg-[#5DBE62] text-white px-4 py-2 rounded text-sm"
@@ -416,11 +479,17 @@ export default function MapboxMap({
         </div>
       </div>
 
-      {/* Status indicator */}
-      <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 text-gray-800 p-2 rounded text-xs z-10 border">
-        <div>Status: {mapInstanceRef.current ? 'Loaded' : 'Loading'}</div>
+      {/* Enhanced status indicator with debug info */}
+      <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 text-gray-800 p-2 rounded text-xs z-10 border max-w-xs">
+        <div>Status: {mapInstanceRef.current ? '✅ Loaded' : '⏳ Loading'}</div>
         <div>Markers: {markersRef.current.length}</div>
         <div>Coordinates: {coordinates.length}</div>
+        {debugInfo.length > 0 && (
+          <div className="mt-1 pt-1 border-t border-gray-200">
+            <div className="font-semibold">Latest:</div>
+            <div className="text-gray-600">{debugInfo[debugInfo.length - 1]}</div>
+          </div>
+        )}
       </div>
     </div>
   )
