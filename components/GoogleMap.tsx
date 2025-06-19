@@ -1,4 +1,4 @@
-// Fixed GoogleMap.tsx - Better ref handling and timing
+// Robust GoogleMap.tsx - Multiple strategies to ensure container exists
 // Replace your GoogleMap.tsx with this version
 
 'use client'
@@ -27,18 +27,6 @@ interface GoogleMapProps {
   dropoffLocation?: Location
 }
 
-interface DebugInfo {
-  hasApiKey: boolean
-  apiKeyPreview: string
-  currentLocation?: Coordinate
-  pickupLocation?: Location
-  dropoffLocation?: Location
-  coordinatesCount: number
-  containerFound: boolean
-  mapInitialized: boolean
-  retryAttempts: number
-}
-
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyD4iFbmtX7jKqh-glzClWjSDpGyG8wQ1Ak'
 
 export default function GoogleMap({ 
@@ -53,49 +41,62 @@ export default function GoogleMap({
   const polylineRef = useRef<google.maps.Polyline | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
+  const [mounted, setMounted] = useState(false)
 
-  // Initialize map with retry logic
-  const initMap = useCallback(async (attempt = 1) => {
+  // Ensure component is mounted client-side
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Wait for DOM and initialize map
+  const initializeMap = useCallback(async () => {
+    if (!mounted) {
+      console.log('⏳ Component not mounted yet, waiting...')
+      return
+    }
+
     try {
-      console.log(`🗺️ Initializing Google Maps (attempt ${attempt})...`)
+      console.log('🗺️ Starting map initialization...')
       
-      // Update debug info
-      setDebugInfo(prev => ({
-        hasApiKey: !!GOOGLE_MAPS_API_KEY,
-        apiKeyPreview: GOOGLE_MAPS_API_KEY ? `${GOOGLE_MAPS_API_KEY.substring(0, 20)}...` : 'MISSING',
-        currentLocation,
-        pickupLocation,
-        dropoffLocation,
-        coordinatesCount: coordinates.length,
-        containerFound: !!mapRef.current,
-        mapInitialized: !!mapInstanceRef.current,
-        retryAttempts: attempt,
-        ...prev
-      }))
-
       if (!GOOGLE_MAPS_API_KEY) {
         throw new Error('Google Maps API key is missing')
       }
 
-      // Check if container exists - with retry logic
-      if (!mapRef.current) {
-        console.warn(`⚠️ Map container not found on attempt ${attempt}`)
-        
-        if (attempt < 5) {
-          console.log(`🔄 Retrying in ${attempt * 500}ms...`)
-          setTimeout(() => {
-            setRetryCount(attempt)
-            initMap(attempt + 1)
-          }, attempt * 500) // Increasing delay: 500ms, 1s, 1.5s, 2s
-          return
-        } else {
-          throw new Error(`Map container not found after ${attempt} attempts`)
+      // Multiple strategies to find the container
+      let container: HTMLElement | null = null
+      
+      // Strategy 1: Use ref
+      if (mapRef.current) {
+        container = mapRef.current
+        console.log('✅ Container found via ref')
+      }
+      
+      // Strategy 2: Query by ID as fallback
+      if (!container) {
+        container = document.getElementById('google-map-container')
+        if (container) {
+          console.log('✅ Container found via getElementById')
+        }
+      }
+      
+      // Strategy 3: Query by class as fallback
+      if (!container) {
+        container = document.querySelector('.google-map-container')
+        if (container) {
+          console.log('✅ Container found via querySelector')
         }
       }
 
-      console.log('✅ Map container found!')
+      if (!container) {
+        throw new Error('Map container still not found after all strategies')
+      }
+
+      console.log('📐 Container dimensions:', {
+        width: container.offsetWidth,
+        height: container.offsetHeight,
+        display: window.getComputedStyle(container).display,
+        visibility: window.getComputedStyle(container).visibility
+      })
 
       // Load Google Maps API
       const loader = new Loader({
@@ -106,26 +107,18 @@ export default function GoogleMap({
 
       console.log('📡 Loading Google Maps API...')
       await loader.load()
-      console.log('✅ Google Maps API loaded successfully')
+      console.log('✅ Google Maps API loaded')
 
-      // Determine map center
-      let center = { lat: 28.5383, lng: -81.3792 } // Default: Gainesville area
-
+      // Determine center
+      let center = { lat: 28.5383, lng: -81.3792 }
+      
       if (currentLocation) {
-        center = {
-          lat: currentLocation.latitude,
-          lng: currentLocation.longitude
-        }
-        console.log('📍 Using current location as center:', center)
-      } else if (pickupLocation && pickupLocation.latitude && pickupLocation.longitude) {
-        center = {
-          lat: parseFloat(pickupLocation.latitude),
-          lng: parseFloat(pickupLocation.longitude)
-        }
-        console.log('📍 Using pickup location as center:', center)
-      } else {
-        console.log('📍 Using default center (Gainesville):', center)
+        center = { lat: currentLocation.latitude, lng: currentLocation.longitude }
+      } else if (pickupLocation?.latitude && pickupLocation?.longitude) {
+        center = { lat: parseFloat(pickupLocation.latitude), lng: parseFloat(pickupLocation.longitude) }
       }
+
+      console.log('📍 Map center:', center)
 
       // Create map
       const mapOptions: google.maps.MapOptions = {
@@ -135,86 +128,44 @@ export default function GoogleMap({
         gestureHandling: 'cooperative',
         zoomControl: true,
         mapTypeControl: false,
-        scaleControl: false,
         streetViewControl: false,
-        rotateControl: false,
-        fullscreenControl: true
+        fullscreenControl: false
       }
 
-      console.log('🗺️ Creating map with options:', mapOptions)
-      const map = new google.maps.Map(mapRef.current, mapOptions)
+      const map = new google.maps.Map(container, mapOptions)
       mapInstanceRef.current = map
       
       console.log('✅ Map created successfully')
+      
+      // Add markers and content
+      addMapContent(map)
+      
       setError(null)
       setIsLoading(false)
-      
-      // Update debug info with success
-      setDebugInfo(prev => ({
-        ...prev!,
-        containerFound: true,
-        mapInitialized: true
-      }))
 
     } catch (err) {
-      console.error('💥 Error initializing Google Maps:', err)
-      setError(`Failed to load Google Maps: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      console.error('💥 Map initialization failed:', err)
+      setError(err instanceof Error ? err.message : 'Unknown error')
       setIsLoading(false)
     }
-  }, [coordinates.length, currentLocation, pickupLocation, dropoffLocation])
+  }, [mounted, currentLocation, pickupLocation, dropoffLocation, coordinates])
 
-  // Initialize map on mount
-  useEffect(() => {
-    console.log('🚀 GoogleMap component mounted')
+  // Add markers and content to map
+  const addMapContent = (map: google.maps.Map) => {
+    console.log('🔄 Adding map content...')
     
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      initMap(1)
-    }, 100)
-
-    return () => {
-      clearTimeout(timer)
-      console.log('🧹 GoogleMap component unmounting')
-    }
-  }, [initMap])
-
-  const clearMapElements = () => {
+    // Clear existing markers
     markersRef.current.forEach(marker => marker.setMap(null))
     markersRef.current = []
-    if (polylineRef.current) {
-      polylineRef.current.setMap(null)
-      polylineRef.current = null
-    }
-  }
-
-  // Update map content when data changes
-  useEffect(() => {
-    if (!mapInstanceRef.current || isLoading) {
-      console.log('⏳ Skipping map update - map not ready or still loading')
-      return
-    }
-
-    console.log('🔄 Updating map content...')
-    console.log('📊 Data:', {
-      currentLocation: !!currentLocation,
-      pickupLocation: !!pickupLocation,
-      dropoffLocation: !!dropoffLocation,
-      coordinatesCount: coordinates.length
-    })
-
-    clearMapElements()
+    
     const bounds = new google.maps.LatLngBounds()
     let hasValidCoordinates = false
 
     // Add pickup marker
-    if (pickupLocation && pickupLocation.latitude && pickupLocation.longitude) {
-      console.log('📍 Adding pickup marker')
-      const pickupMarker = new google.maps.Marker({
-        position: {
-          lat: parseFloat(pickupLocation.latitude),
-          lng: parseFloat(pickupLocation.longitude)
-        },
-        map: mapInstanceRef.current,
+    if (pickupLocation?.latitude && pickupLocation?.longitude) {
+      const pickup = new google.maps.Marker({
+        position: { lat: parseFloat(pickupLocation.latitude), lng: parseFloat(pickupLocation.longitude) },
+        map,
         title: `Pickup: ${pickupLocation.name}`,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -225,21 +176,16 @@ export default function GoogleMap({
           strokeWeight: 2
         }
       })
-
-      markersRef.current.push(pickupMarker)
-      bounds.extend(pickupMarker.getPosition()!)
+      markersRef.current.push(pickup)
+      bounds.extend(pickup.getPosition()!)
       hasValidCoordinates = true
     }
 
     // Add dropoff marker
-    if (dropoffLocation && dropoffLocation.latitude && dropoffLocation.longitude) {
-      console.log('📍 Adding dropoff marker')
-      const dropoffMarker = new google.maps.Marker({
-        position: {
-          lat: parseFloat(dropoffLocation.latitude),
-          lng: parseFloat(dropoffLocation.longitude)
-        },
-        map: mapInstanceRef.current,
+    if (dropoffLocation?.latitude && dropoffLocation?.longitude) {
+      const dropoff = new google.maps.Marker({
+        position: { lat: parseFloat(dropoffLocation.latitude), lng: parseFloat(dropoffLocation.longitude) },
+        map,
         title: `Dropoff: ${dropoffLocation.name}`,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -250,21 +196,16 @@ export default function GoogleMap({
           strokeWeight: 2
         }
       })
-
-      markersRef.current.push(dropoffMarker)
-      bounds.extend(dropoffMarker.getPosition()!)
+      markersRef.current.push(dropoff)
+      bounds.extend(dropoff.getPosition()!)
       hasValidCoordinates = true
     }
 
     // Add current location marker
     if (currentLocation) {
-      console.log('📍 Adding current location marker')
-      const currentMarker = new google.maps.Marker({
-        position: {
-          lat: currentLocation.latitude,
-          lng: currentLocation.longitude
-        },
-        map: mapInstanceRef.current,
+      const current = new google.maps.Marker({
+        position: { lat: currentLocation.latitude, lng: currentLocation.longitude },
+        map,
         title: 'Current Location',
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -276,107 +217,83 @@ export default function GoogleMap({
         },
         animation: google.maps.Animation.BOUNCE
       })
-
-      markersRef.current.push(currentMarker)
-      bounds.extend(currentMarker.getPosition()!)
+      markersRef.current.push(current)
+      bounds.extend(current.getPosition()!)
       hasValidCoordinates = true
     }
 
     // Add coordinate trail
     if (coordinates.length > 1) {
-      console.log('📍 Adding coordinate trail')
-      const path = coordinates.map(coord => ({
-        lat: coord.latitude,
-        lng: coord.longitude
-      }))
-
+      const path = coordinates.map(coord => ({ lat: coord.latitude, lng: coord.longitude }))
       polylineRef.current = new google.maps.Polyline({
         path,
         geodesic: true,
         strokeColor: '#5DBE62',
         strokeOpacity: 0.8,
         strokeWeight: 4,
-        map: mapInstanceRef.current
+        map
       })
-
-      coordinates.forEach(coord => {
-        bounds.extend(new google.maps.LatLng(coord.latitude, coord.longitude))
-      })
+      coordinates.forEach(coord => bounds.extend({ lat: coord.latitude, lng: coord.longitude }))
       hasValidCoordinates = true
     }
 
-    // Add directions
-    if (pickupLocation && dropoffLocation && 
-        pickupLocation.latitude && pickupLocation.longitude &&
-        dropoffLocation.latitude && dropoffLocation.longitude) {
-      console.log('🗺️ Adding route directions')
-      
-      const directionsService = new google.maps.DirectionsService()
-      const directionsRenderer = new google.maps.DirectionsRenderer({
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: '#34D399',
-          strokeOpacity: 0.6,
-          strokeWeight: 3
-        }
-      })
-
-      directionsRenderer.setMap(mapInstanceRef.current)
-
-      directionsService.route({
-        origin: {
-          lat: parseFloat(pickupLocation.latitude),
-          lng: parseFloat(pickupLocation.longitude)
-        },
-        destination: {
-          lat: parseFloat(dropoffLocation.latitude),
-          lng: parseFloat(dropoffLocation.longitude)
-        },
-        travelMode: google.maps.TravelMode.DRIVING
-      }, (result, status) => {
-        if (status === 'OK' && result) {
-          directionsRenderer.setDirections(result)
-          console.log('✅ Route directions added')
-        } else {
-          console.warn('⚠️ Failed to get directions:', status)
-        }
-      })
-    }
-
-    // Fit map to bounds
+    // Fit bounds
     if (hasValidCoordinates && !bounds.isEmpty()) {
-      console.log('📐 Fitting map to bounds')
-      mapInstanceRef.current.fitBounds(bounds)
+      map.fitBounds(bounds)
       
-      const listener = google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
-        if (mapInstanceRef.current!.getZoom()! > 15) {
-          mapInstanceRef.current!.setZoom(15)
-        }
+      // Limit zoom level
+      const listener = google.maps.event.addListener(map, 'bounds_changed', () => {
+        if (map.getZoom()! > 15) map.setZoom(15)
         google.maps.event.removeListener(listener)
       })
     }
 
-    console.log('✅ Map content updated')
+    console.log('✅ Map content added')
+  }
 
+  // Initialize when mounted
+  useEffect(() => {
+    if (!mounted) return
+
+    console.log('🚀 Component mounted, waiting for DOM...')
+    
+    // Wait for next tick to ensure DOM is ready
+    const timer = setTimeout(() => {
+      initializeMap()
+    }, 500) // Longer delay
+
+    return () => clearTimeout(timer)
+  }, [mounted, initializeMap])
+
+  // Update content when data changes
+  useEffect(() => {
+    if (mapInstanceRef.current && !isLoading) {
+      addMapContent(mapInstanceRef.current)
+    }
   }, [coordinates, currentLocation, pickupLocation, dropoffLocation, isLoading])
+
+  // Don't render anything until mounted (prevents hydration issues)
+  if (!mounted) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-pulse h-8 w-8 bg-gray-300 rounded mx-auto mb-2"></div>
+          <p className="text-gray-600 text-sm">Initializing...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5DBE62] mx-auto mb-2"></div>
-          <p className="text-gray-600 text-sm">
-            Loading Google Maps... 
-            {retryCount > 0 && ` (attempt ${retryCount + 1})`}
-          </p>
-          {debugInfo && (
-            <div className="mt-2 text-xs text-gray-500">
-              <div>Container Found: {debugInfo.containerFound ? 'Yes' : 'No'}</div>
-              <div>Retry Attempts: {debugInfo.retryAttempts}</div>
-              <div>Current Location: {debugInfo.currentLocation ? 'Yes' : 'No'}</div>
-              <div>Coordinates: {debugInfo.coordinatesCount}</div>
-            </div>
-          )}
+          <p className="text-gray-600 text-sm">Loading Google Maps...</p>
+          <div className="mt-2 text-xs text-gray-500">
+            <div>Container: {mapRef.current ? 'Found' : 'Searching...'}</div>
+            <div>Mounted: {mounted ? 'Yes' : 'No'}</div>
+          </div>
         </div>
       </div>
     )
@@ -388,29 +305,20 @@ export default function GoogleMap({
         <div className="text-center p-6">
           <div className="text-red-500 text-xl mb-2">⚠️</div>
           <p className="text-red-600 text-sm mb-4">{error}</p>
-          {debugInfo && (
-            <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
-              <div><strong>Debug Info:</strong></div>
-              <div>API Key: {debugInfo.apiKeyPreview}</div>
-              <div>Container Found: {debugInfo.containerFound ? 'Yes' : 'No'}</div>
-              <div>Map Initialized: {debugInfo.mapInitialized ? 'Yes' : 'No'}</div>
-              <div>Retry Attempts: {debugInfo.retryAttempts}</div>
-              <div>Has Current Location: {debugInfo.currentLocation ? 'Yes' : 'No'}</div>
-              <div>Has Pickup: {debugInfo.pickupLocation ? 'Yes' : 'No'}</div>
-              <div>Has Dropoff: {debugInfo.dropoffLocation ? 'Yes' : 'No'}</div>
-              <div>Coordinates Count: {debugInfo.coordinatesCount}</div>
-            </div>
-          )}
+          <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded mb-4">
+            <div>Mounted: {mounted ? 'Yes' : 'No'}</div>
+            <div>Ref Current: {mapRef.current ? 'Found' : 'Missing'}</div>
+            <div>API Key: Present</div>
+          </div>
           <button
             onClick={() => {
               setError(null)
               setIsLoading(true)
-              setRetryCount(0)
-              initMap(1)
+              setTimeout(initializeMap, 100)
             }}
-            className="mt-4 bg-[#5DBE62] text-white px-4 py-2 rounded text-sm"
+            className="bg-[#5DBE62] text-white px-4 py-2 rounded text-sm"
           >
-            Retry Loading Map
+            Try Again
           </button>
         </div>
       </div>
@@ -419,12 +327,22 @@ export default function GoogleMap({
 
   return (
     <div className="w-full h-full relative">
+      {/* Multiple container strategies */}
       <div 
-        ref={mapRef} 
-        className="w-full h-full"
-        style={{ minHeight: '400px' }} // Ensure minimum height
+        ref={mapRef}
+        id="google-map-container"
+        className="google-map-container w-full h-full"
+        style={{ 
+          minHeight: '400px',
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          position: 'relative'
+        }}
       />
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-2 text-xs">
+      
+      {/* Map legend */}
+      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-2 text-xs z-10">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-3 h-3 bg-[#5DBE62] rounded-full"></div>
           <span>Pickup</span>
@@ -439,11 +357,10 @@ export default function GoogleMap({
         </div>
       </div>
 
-      {/* Debug info overlay */}
-      <div className="absolute bottom-4 left-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
-        <div>Map Status: {mapInstanceRef.current ? 'Loaded' : 'Not Loaded'}</div>
+      {/* Debug overlay */}
+      <div className="absolute bottom-4 left-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-10">
+        <div>Status: {mapInstanceRef.current ? 'Loaded' : 'Loading'}</div>
         <div>Markers: {markersRef.current.length}</div>
-        <div>Current Loc: {currentLocation ? 'Yes' : 'No'}</div>
         <div>Container: {mapRef.current ? 'Found' : 'Missing'}</div>
       </div>
     </div>
