@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { MapPin, Car, AlertCircle, RefreshCw } from 'lucide-react'
-import GoogleMap from '../../../components/GoogleMap'
+import MapboxMap from '../../../components/MapboxMap'
 import { getTrackingData, type TrackingData } from '../../../lib/tracking'
 
 export default function LiveTrackingPage() {
@@ -156,7 +156,7 @@ export default function LiveTrackingPage() {
               
               <div className="h-96 md:h-[500px]">
                 {trackingData.last_coordinate ? (
-                  <GoogleMap
+                  <MapboxMap
                     coordinates={trackingData.coordinates}
                     currentLocation={trackingData.last_coordinate}
                     pickupLocation={trackingData.ride.pickup_location}
