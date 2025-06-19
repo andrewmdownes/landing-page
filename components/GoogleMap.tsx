@@ -1,4 +1,3 @@
-// components/GoogleMap.tsx
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
@@ -18,34 +17,26 @@ interface Location {
   longitude: string
 }
 
-interface Route {
-  from: string
-  to: string
-}
-
 interface GoogleMapProps {
   coordinates: Coordinate[]
   currentLocation?: Coordinate
   pickupLocation?: Location
   dropoffLocation?: Location
-  route: Route
 }
 
-// Replace with your Google Maps API key
+// Use your existing Google Maps API key
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyD4iFbmtX7jKqh-glzClWjSDpGyG8wQ1Ak'
 
 export default function GoogleMap({ 
   coordinates, 
   currentLocation, 
   pickupLocation, 
-  dropoffLocation, 
-  route 
+  dropoffLocation
 }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<google.maps.Marker[]>([])
   const polylineRef = useRef<google.maps.Polyline | null>(null)
-  const routePolylineRef = useRef<google.maps.Polyline | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -135,13 +126,9 @@ export default function GoogleMap({
       polylineRef.current.setMap(null)
       polylineRef.current = null
     }
-    if (routePolylineRef.current) {
-      routePolylineRef.current.setMap(null)
-      routePolylineRef.current = null
-    }
   }
 
-  // Update map with new data
+  // Update map with new data - fix dependencies
   useEffect(() => {
     if (!mapInstanceRef.current || isLoading) return
 

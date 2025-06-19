@@ -1,48 +1,36 @@
-// app/live-tracking/[token]/page.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { MapPin, Clock, Car, AlertCircle, RefreshCw } from 'lucide-react'
 import GoogleMap from '../../../components/GoogleMap'
+import { getTrackingData } from '../../../lib/tracking'
 
 interface TrackingData {
   session: {
-    id: string
-    created_at: string
-    expires_at: string
-    last_updated: string
+    id: any
+    created_at: any
+    expires_at: any
+    last_updated: any
   }
   ride: {
-    from: string
-    to: string
-    date: string
-    time: string
-    pickup_location?: {
-      id: string
-      name: string
-      address: string
-      latitude: string
-      longitude: string
-    }
-    dropoff_location?: {
-      id: string
-      name: string
-      address: string
-      latitude: string
-      longitude: string
-    }
+    from: any
+    to: any
+    date: any
+    time: any
+    pickup_location?: any
+    dropoff_location?: any
   }
   coordinates: Array<{
-    latitude: number
-    longitude: number
-    timestamp: string
+    latitude: any
+    longitude: any
+    timestamp: any
   }>
   last_coordinate?: {
-    latitude: number
-    longitude: number
-    timestamp: string
-  }
+    latitude: any
+    longitude: any
+    timestamp: any
+  } | null
 }
 
 export default function LiveTrackingPage() {
@@ -54,8 +42,6 @@ export default function LiveTrackingPage() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Format time helper
   const formatTime = (dateString: string) => {
@@ -76,18 +62,17 @@ export default function LiveTrackingPage() {
     })
   }
 
-  // Fetch tracking data
-  const fetchTrackingData = async (showRefreshIndicator = false) => {
+  // Fetch tracking data - useCallback to fix dependency warning
+  const fetchTrackingData = useCallback(async (showRefreshIndicator = false) => {
     try {
       if (showRefreshIndicator) {
         setIsRefreshing(true)
       }
 
-      const response = await fetch(`/api/live-tracking/${token}`)
-      const data = await response.json()
+      const { data, error: fetchError } = await getTrackingData(token)
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch tracking data')
+      if (fetchError) {
+        throw new Error(fetchError)
       }
 
       setTrackingData(data)
@@ -100,7 +85,7 @@ export default function LiveTrackingPage() {
       setLoading(false)
       setIsRefreshing(false)
     }
-  }
+  }, [token])
 
   // Setup polling
   useEffect(() => {
@@ -108,17 +93,13 @@ export default function LiveTrackingPage() {
     fetchTrackingData()
 
     // Set up interval for updates every 30 seconds
-    intervalRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       fetchTrackingData(true)
     }, 30000)
 
     // Cleanup interval on unmount
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [token])
+    return () => clearInterval(interval)
+  }, [fetchTrackingData])
 
   // Manual refresh
   const handleRefresh = () => {
@@ -216,10 +197,6 @@ export default function LiveTrackingPage() {
                     currentLocation={trackingData.last_coordinate}
                     pickupLocation={trackingData.ride.pickup_location}
                     dropoffLocation={trackingData.ride.dropoff_location}
-                    route={{
-                      from: trackingData.ride.from,
-                      to: trackingData.ride.to
-                    }}
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-100">
