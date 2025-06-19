@@ -1,5 +1,4 @@
-// Step 1: Enhanced GoogleMap component with better error handling
-// Replace your components/GoogleMap.tsx with this version
+// Fixed GoogleMap.tsx - Replace your existing file with this version
 
 'use client'
 
@@ -27,6 +26,15 @@ interface GoogleMapProps {
   dropoffLocation?: Location
 }
 
+interface DebugInfo {
+  hasApiKey: boolean
+  apiKeyPreview: string
+  currentLocation?: Coordinate
+  pickupLocation?: Location
+  dropoffLocation?: Location
+  coordinatesCount: number
+}
+
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyD4iFbmtX7jKqh-glzClWjSDpGyG8wQ1Ak'
 
 export default function GoogleMap({ 
@@ -41,7 +49,7 @@ export default function GoogleMap({
   const polylineRef = useRef<google.maps.Polyline | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
 
   // Initialize map only once
   useEffect(() => {
@@ -127,7 +135,7 @@ export default function GoogleMap({
     }
 
     initMap()
-  }, []) // Only run once on mount
+  }, [coordinates.length, currentLocation, pickupLocation, dropoffLocation]) // Include all dependencies
 
   const clearMapElements = () => {
     markersRef.current.forEach(marker => marker.setMap(null))
