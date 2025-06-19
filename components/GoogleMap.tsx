@@ -1,3 +1,6 @@
+// Step 1: Enhanced GoogleMap component with better error handling
+// Replace your components/GoogleMap.tsx with this version
+
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
@@ -38,49 +41,86 @@ export default function GoogleMap({
   const polylineRef = useRef<google.maps.Polyline | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
 
   // Initialize map only once
   useEffect(() => {
     const initMap = async () => {
       try {
-        setIsLoading(true)
+        console.log('🗺️ Initializing Google Maps...')
+        console.log('🔑 API Key:', GOOGLE_MAPS_API_KEY ? `${GOOGLE_MAPS_API_KEY.substring(0, 20)}...` : 'MISSING')
         
+        setIsLoading(true)
+        setDebugInfo({
+          hasApiKey: !!GOOGLE_MAPS_API_KEY,
+          apiKeyPreview: GOOGLE_MAPS_API_KEY ? `${GOOGLE_MAPS_API_KEY.substring(0, 20)}...` : 'MISSING',
+          currentLocation,
+          pickupLocation,
+          dropoffLocation,
+          coordinatesCount: coordinates.length
+        })
+
+        if (!GOOGLE_MAPS_API_KEY) {
+          throw new Error('Google Maps API key is missing')
+        }
+
         const loader = new Loader({
           apiKey: GOOGLE_MAPS_API_KEY,
           version: 'weekly',
           libraries: ['maps', 'geometry']
         })
 
+        console.log('📡 Loading Google Maps API...')
         await loader.load()
+        console.log('✅ Google Maps API loaded successfully')
 
-        if (!mapRef.current) return
+        if (!mapRef.current) {
+          console.error('❌ Map container ref is null')
+          throw new Error('Map container not found')
+        }
 
-        let center = { lat: 28.5383, lng: -81.3792 }
+        console.log('📍 Map container found, creating map...')
+
+        let center = { lat: 28.5383, lng: -81.3792 } // Default: Gainesville area
 
         if (currentLocation) {
           center = {
             lat: currentLocation.latitude,
             lng: currentLocation.longitude
           }
+          console.log('📍 Using current location as center:', center)
         } else if (pickupLocation) {
           center = {
             lat: parseFloat(pickupLocation.latitude),
             lng: parseFloat(pickupLocation.longitude)
           }
+          console.log('📍 Using pickup location as center:', center)
+        } else {
+          console.log('📍 Using default center (Gainesville):', center)
         }
 
         const mapOptions: google.maps.MapOptions = {
           center,
           zoom: 10,
           mapTypeId: google.maps.MapTypeId.ROADMAP,
+          gestureHandling: 'cooperative',
+          zoomControl: true,
+          mapTypeControl: false,
+          scaleControl: false,
+          streetViewControl: false,
+          rotateControl: false,
+          fullscreenControl: true
         }
 
+        console.log('🗺️ Creating map with options:', mapOptions)
         const map = new google.maps.Map(mapRef.current, mapOptions)
         mapInstanceRef.current = map
+        
+        console.log('✅ Map created successfully')
         setError(null)
       } catch (err) {
-        console.error('Error initializing Google Maps:', err)
-        setError('Failed to load Google Maps.')
+        console.error('💥 Error initializing Google Maps:', err)
+        setError(`Failed to load Google Maps: ${err instanceof Error ? err.message : 'Unknown error'}`)
       } finally {
         setIsLoading(false)
       }
@@ -100,13 +140,25 @@ export default function GoogleMap({
 
   // Update map content when data changes
   useEffect(() => {
-    if (!mapInstanceRef.current || isLoading) return
+    if (!mapInstanceRef.current || isLoading) {
+      console.log('⏳ Skipping map update - map not ready or still loading')
+      return
+    }
+
+    console.log('🔄 Updating map content...')
+    console.log('📊 Data:', {
+      currentLocation: !!currentLocation,
+      pickupLocation: !!pickupLocation,
+      dropoffLocation: !!dropoffLocation,
+      coordinatesCount: coordinates.length
+    })
 
     clearMapElements()
     const bounds = new google.maps.LatLngBounds()
     let hasValidCoordinates = false
 
-    if (pickupLocation) {
+    if (pickupLocation && pickupLocation.latitude && pickupLocation.longitude) {
+      console.log('📍 Adding pickup marker')
       const pickupMarker = new google.maps.Marker({
         position: {
           lat: parseFloat(pickupLocation.latitude),
@@ -129,7 +181,8 @@ export default function GoogleMap({
       hasValidCoordinates = true
     }
 
-    if (dropoffLocation) {
+    if (dropoffLocation && dropoffLocation.latitude && dropoffLocation.longitude) {
+      console.log('📍 Adding dropoff marker')
       const dropoffMarker = new google.maps.Marker({
         position: {
           lat: parseFloat(dropoffLocation.latitude),
@@ -153,6 +206,7 @@ export default function GoogleMap({
     }
 
     if (currentLocation) {
+      console.log('📍 Adding current location marker')
       const currentMarker = new google.maps.Marker({
         position: {
           lat: currentLocation.latitude,
@@ -177,6 +231,7 @@ export default function GoogleMap({
     }
 
     if (coordinates.length > 1) {
+      console.log('📍 Adding coordinate trail')
       const path = coordinates.map(coord => ({
         lat: coord.latitude,
         lng: coord.longitude
@@ -197,7 +252,11 @@ export default function GoogleMap({
       hasValidCoordinates = true
     }
 
-    if (pickupLocation && dropoffLocation) {
+    if (pickupLocation && dropoffLocation && 
+        pickupLocation.latitude && pickupLocation.longitude &&
+        dropoffLocation.latitude && dropoffLocation.longitude) {
+      console.log('🗺️ Adding route directions')
+      
       const directionsService = new google.maps.DirectionsService()
       const directionsRenderer = new google.maps.DirectionsRenderer({
         suppressMarkers: true,
@@ -223,11 +282,15 @@ export default function GoogleMap({
       }, (result, status) => {
         if (status === 'OK' && result) {
           directionsRenderer.setDirections(result)
+          console.log('✅ Route directions added')
+        } else {
+          console.warn('⚠️ Failed to get directions:', status)
         }
       })
     }
 
     if (hasValidCoordinates && !bounds.isEmpty()) {
+      console.log('📐 Fitting map to bounds')
       mapInstanceRef.current.fitBounds(bounds)
       
       const listener = google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
@@ -238,6 +301,8 @@ export default function GoogleMap({
       })
     }
 
+    console.log('✅ Map content updated')
+
   }, [coordinates, currentLocation, pickupLocation, dropoffLocation, isLoading])
 
   if (isLoading) {
@@ -245,7 +310,14 @@ export default function GoogleMap({
       <div className="w-full h-full flex items-center justify-center bg-gray-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5DBE62] mx-auto mb-2"></div>
-          <p className="text-gray-600 text-sm">Loading map...</p>
+          <p className="text-gray-600 text-sm">Loading Google Maps...</p>
+          {debugInfo && (
+            <div className="mt-2 text-xs text-gray-500">
+              <div>API Key: {debugInfo.hasApiKey ? 'Present' : 'Missing'}</div>
+              <div>Current Location: {debugInfo.currentLocation ? 'Yes' : 'No'}</div>
+              <div>Coordinates: {debugInfo.coordinatesCount}</div>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -256,7 +328,23 @@ export default function GoogleMap({
       <div className="w-full h-full flex items-center justify-center bg-gray-100">
         <div className="text-center p-6">
           <div className="text-red-500 text-xl mb-2">⚠️</div>
-          <p className="text-red-600 text-sm">{error}</p>
+          <p className="text-red-600 text-sm mb-4">{error}</p>
+          {debugInfo && (
+            <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
+              <div><strong>Debug Info:</strong></div>
+              <div>API Key: {debugInfo.apiKeyPreview}</div>
+              <div>Has Current Location: {debugInfo.currentLocation ? 'Yes' : 'No'}</div>
+              <div>Has Pickup: {debugInfo.pickupLocation ? 'Yes' : 'No'}</div>
+              <div>Has Dropoff: {debugInfo.dropoffLocation ? 'Yes' : 'No'}</div>
+              <div>Coordinates Count: {debugInfo.coordinatesCount}</div>
+            </div>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-[#5DBE62] text-white px-4 py-2 rounded text-sm"
+          >
+            Reload Page
+          </button>
         </div>
       </div>
     )
@@ -278,6 +366,13 @@ export default function GoogleMap({
           <div className="w-3 h-3 bg-[#007AFF] rounded-full"></div>
           <span>Live Location</span>
         </div>
+      </div>
+
+      {/* Debug info overlay - remove this once working */}
+      <div className="absolute bottom-4 left-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
+        <div>Map Status: {mapInstanceRef.current ? 'Loaded' : 'Not Loaded'}</div>
+        <div>Markers: {markersRef.current.length}</div>
+        <div>Current Loc: {currentLocation ? 'Yes' : 'No'}</div>
       </div>
     </div>
   )
