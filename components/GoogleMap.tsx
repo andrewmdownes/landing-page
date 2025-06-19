@@ -39,6 +39,7 @@ export default function GoogleMap({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Initialize map only once
   useEffect(() => {
     const initMap = async () => {
       try {
@@ -86,7 +87,7 @@ export default function GoogleMap({
     }
 
     initMap()
-  }, [])
+  }, []) // Only run once on mount
 
   const clearMapElements = () => {
     markersRef.current.forEach(marker => marker.setMap(null))
@@ -97,6 +98,7 @@ export default function GoogleMap({
     }
   }
 
+  // Update map content when data changes
   useEffect(() => {
     if (!mapInstanceRef.current || isLoading) return
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { MapPin, Clock, Car, AlertCircle, RefreshCw } from 'lucide-react'
+import { MapPin, Car, AlertCircle, RefreshCw } from 'lucide-react'
 import GoogleMap from '../../../components/GoogleMap'
 import { getTrackingData, type TrackingData } from '../../../lib/tracking'
 
@@ -137,14 +137,21 @@ export default function LiveTrackingPage() {
                   <MapPin className="h-5 w-5 text-[#5DBE62]" />
                   Live Location
                 </h2>
-                <button
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#5DBE62] transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
+                <div className="flex items-center gap-4">
+                  {lastUpdated && (
+                    <span className="text-xs text-gray-500">
+                      Updated: {lastUpdated.toLocaleTimeString()}
+                    </span>
+                  )}
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#5DBE62] transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                </div>
               </div>
               
               <div className="h-96 md:h-[500px]">
