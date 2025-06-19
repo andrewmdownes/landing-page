@@ -1,11 +1,30 @@
 // app/api/live-tracking/[token]/route.js
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Direct Supabase REST API calls to avoid client import issues
+async function fetchSupabase(endpoint, options = {}) {
+  const url = `${SUPABASE_URL}/rest/v1/${endpoint}`
+  const headers = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json',
+    ...options.headers
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  })
+
+  if (!response.ok) {
+    throw new Error(`Supabase API error: ${response.status} ${response.statusText}`)
+  }
+
+  return response.json()
+}
 
 export async function GET(request, { params }) {
   try {
@@ -21,37 +40,27 @@ export async function GET(request, { params }) {
     console.log('Fetching tracking session for token:', token)
 
     // Get tracking session by token (public access)
-    const { data: session, error: sessionError } = await supabase
-      .from('live_tracking_sessions')
-      .select(`
-        *,
-        rides(
-          id,
-          departure_date,
-          departure_time,
-          from_city:cities!from_city_id(name),
-          to_city:cities!to_city_id(name),
-          pickup_location:city_points!pickup_location_id(id, name, address, latitude, longitude),
-          dropoff_location:city_points!dropoff_location_id(id, name, address, latitude, longitude)
-        )
-      `)
-      .eq('session_token', token)
-      .eq('is_active', true)
-      .single()
-
-    if (sessionError) {
-      console.error('Session fetch error:', sessionError)
-      if (sessionError.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Tracking session not found or expired' }, 
-          { status: 404 }
-        )
-      }
+    const sessionQuery = `live_tracking_sessions?session_token=eq.${token}&is_active=eq.true&select=*,rides(id,departure_date,departure_time,from_city:cities!from_city_id(name),to_city:cities!to_city_id(name),pickup_location:city_points!pickup_location_id(id,name,address,latitude,longitude),dropoff_location:city_points!dropoff_location_id(id,name,address,latitude,longitude))`
+    
+    let sessions
+    try {
+      sessions = await fetchSupabase(sessionQuery)
+    } catch (error) {
+      console.error('Session fetch error:', error)
       return NextResponse.json(
         { error: 'Failed to fetch tracking session' }, 
         { status: 500 }
       )
     }
+
+    if (!sessions || sessions.length === 0) {
+      return NextResponse.json(
+        { error: 'Tracking session not found or expired' }, 
+        { status: 404 }
+      )
+    }
+
+    const session = sessions[0]
 
     // Check if session is still valid
     const now = new Date()
@@ -65,15 +74,12 @@ export async function GET(request, { params }) {
     }
 
     // Get latest coordinates (last 10 points for route trail)
-    const { data: coordinates, error: coordsError } = await supabase
-      .from('tracking_coordinates')
-      .select('latitude, longitude, timestamp')
-      .eq('session_id', session.id)
-      .order('timestamp', { ascending: false })
-      .limit(10)
-
-    if (coordsError) {
-      console.error('Coordinates fetch error:', coordsError)
+    let coordinates = []
+    try {
+      const coordsQuery = `tracking_coordinates?session_id=eq.${session.id}&select=latitude,longitude,timestamp&order=timestamp.desc&limit=10`
+      coordinates = await fetchSupabase(coordsQuery)
+    } catch (error) {
+      console.error('Coordinates fetch error:', error)
       // Don't fail the request if coordinates can't be fetched
     }
 
