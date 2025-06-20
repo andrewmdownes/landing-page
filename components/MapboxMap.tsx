@@ -150,7 +150,7 @@ export default function MapboxMap({
         }
 
         // Add route line - either from coordinates or connect pickup to dropoff
-        if (coordinates.length > 1) {
+        if (coordinates.length >= 2) {
           // Use actual tracking coordinates
           const routeCoords: [number, number][] = coordinates.map(coord => [
             coord.longitude, 
@@ -190,7 +190,7 @@ export default function MapboxMap({
           
         } else if (pickupLocation?.latitude && pickupLocation?.longitude && 
                    dropoffLocation?.latitude && dropoffLocation?.longitude) {
-          // Draw a straight line between pickup and dropoff
+          // Draw a straight line between pickup and dropoff as placeholder
           const plannedRouteCoords: [number, number][] = [
             [parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)],
             [parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)]
@@ -224,6 +224,44 @@ export default function MapboxMap({
             }
           })
           console.log('✅ Planned route added (dashed line)')
+        }
+        
+        // If we have current location but no route yet, connect pickup → current → dropoff
+        if (coordinates.length < 2 && currentLocation && pickupLocation?.latitude && dropoffLocation?.latitude) {
+          const connectingRouteCoords: [number, number][] = [
+            [parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)],
+            [currentLocation.longitude, currentLocation.latitude],
+            [parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)]
+          ]
+          
+          map.addSource('connecting-route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: connectingRouteCoords
+              }
+            }
+          })
+
+          map.addLayer({
+            id: 'connecting-route',
+            type: 'line',
+            source: 'connecting-route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#5DBE62',
+              'line-width': 4,
+              'line-opacity': 0.7,
+              'line-dasharray': [1, 1]
+            }
+          })
+          console.log('✅ Connecting route added (pickup → live → dropoff)')
         }
 
         // Fit map to show all locations
