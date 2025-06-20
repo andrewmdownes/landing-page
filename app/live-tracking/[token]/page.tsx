@@ -6,6 +6,12 @@ import { MapPin, Car, AlertCircle, RefreshCw } from 'lucide-react'
 import MapboxMap from '../../../components/MapboxMap'
 import { getTrackingData, type TrackingData } from '../../../lib/tracking'
 
+console.log('🔍 Environment check:', {
+  hasToken: !!process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
+  tokenPreview: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN?.substring(0, 20),
+  nodeEnv: process.env.NODE_ENV
+});
+
 export default function LiveTrackingPage() {
   const params = useParams()
   const token = params.token as string

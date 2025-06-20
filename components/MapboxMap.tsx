@@ -41,7 +41,7 @@ export default function MapboxMap({
   const [tokenValid, setTokenValid] = useState<boolean | null>(null)
 
   // Get the access token
-  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
+  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoicmliaXQ0MiIsImEiOiJjbWMzc2JyOXYwODRuMmtvaWR1dWJjNDVyIn0.CYHEuFkok2cF-N-XxX2PGA'
 
   // Debug function to log information
   const addDebugInfo = useCallback((info: string) => {
