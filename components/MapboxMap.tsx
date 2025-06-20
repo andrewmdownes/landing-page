@@ -25,9 +25,6 @@ interface MapboxMapProps {
   dropoffLocation?: Location
 }
 
-// Set your Mapbox access token - we'll debug this
-const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
-
 export default function MapboxMap({ 
   coordinates, 
   currentLocation, 
@@ -41,12 +38,47 @@ export default function MapboxMap({
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
   const [debugInfo, setDebugInfo] = useState<string[]>([])
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null)
+
+  // Get the access token
+  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
 
   // Debug function to log information
   const addDebugInfo = useCallback((info: string) => {
-    console.log(`🐛 Debug: ${info}`)
+    console.log(`🗺️ Mapbox Debug: ${info}`)
     setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${info}`])
   }, [])
+
+  // Test the Mapbox token
+  const testMapboxToken = useCallback(async (token: string) => {
+    if (!token) {
+      addDebugInfo('No token provided for testing')
+      return false
+    }
+
+    try {
+      addDebugInfo(`Testing token: ${token.substring(0, 10)}...`)
+      
+      // Test with a simple geocoding request
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/test.json?access_token=${token}`
+      )
+      
+      if (response.ok) {
+        addDebugInfo('✅ Token test successful')
+        setTokenValid(true)
+        return true
+      } else {
+        addDebugInfo(`❌ Token test failed: ${response.status} ${response.statusText}`)
+        setTokenValid(false)
+        return false
+      }
+    } catch (error) {
+      addDebugInfo(`❌ Token test error: ${error}`)
+      setTokenValid(false)
+      return false
+    }
+  }, [addDebugInfo])
 
   // Ensure component is mounted client-side
   useEffect(() => {
@@ -54,35 +86,12 @@ export default function MapboxMap({
     addDebugInfo('Component mounted')
   }, [addDebugInfo])
 
-  // Check access token on mount
+  // Test token when component mounts
   useEffect(() => {
-    if (mounted) {
-      addDebugInfo(`Access token: ${MAPBOX_ACCESS_TOKEN ? `${MAPBOX_ACCESS_TOKEN.slice(0, 10)}...` : 'MISSING'}`)
-      
-      if (!MAPBOX_ACCESS_TOKEN) {
-        setError('Mapbox access token is missing. Please add NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN to your environment variables.')
-        setIsLoading(false)
-        return
-      }
-
-      if (MAPBOX_ACCESS_TOKEN.includes('xxxxxxxxx')) {
-        setError('Mapbox access token appears to be a placeholder. Please set a real token.')
-        setIsLoading(false)
-        return
-      }
-
-      // Set the access token
-      try {
-        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
-        addDebugInfo('Access token set successfully')
-      } catch (err) {
-        addDebugInfo(`Failed to set access token: ${err}`)
-        setError('Failed to set Mapbox access token')
-        setIsLoading(false)
-        return
-      }
+    if (mounted && MAPBOX_ACCESS_TOKEN) {
+      testMapboxToken(MAPBOX_ACCESS_TOKEN)
     }
-  }, [mounted, addDebugInfo])
+  }, [mounted, MAPBOX_ACCESS_TOKEN, testMapboxToken])
 
   // Clear existing markers
   const clearMarkers = useCallback(() => {
@@ -100,9 +109,9 @@ export default function MapboxMap({
     const bounds = new mapboxgl.LngLatBounds()
     let hasValidCoordinates = false
 
-    // Add pickup marker
-    if (pickupLocation?.latitude && pickupLocation?.longitude) {
-      try {
+    try {
+      // Add pickup marker if available
+      if (pickupLocation?.latitude && pickupLocation?.longitude) {
         const pickupMarker = new mapboxgl.Marker({
           color: '#5DBE62',
           scale: 0.8
@@ -119,14 +128,10 @@ export default function MapboxMap({
         bounds.extend([parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)])
         hasValidCoordinates = true
         addDebugInfo('Pickup marker added')
-      } catch (err) {
-        addDebugInfo(`Failed to add pickup marker: ${err}`)
       }
-    }
 
-    // Add dropoff marker
-    if (dropoffLocation?.latitude && dropoffLocation?.longitude) {
-      try {
+      // Add dropoff marker if available
+      if (dropoffLocation?.latitude && dropoffLocation?.longitude) {
         const dropoffMarker = new mapboxgl.Marker({
           color: '#ff6b6b',
           scale: 0.8
@@ -143,14 +148,10 @@ export default function MapboxMap({
         bounds.extend([parseFloat(dropoffLocation.longitude), parseFloat(dropoffLocation.latitude)])
         hasValidCoordinates = true
         addDebugInfo('Dropoff marker added')
-      } catch (err) {
-        addDebugInfo(`Failed to add dropoff marker: ${err}`)
       }
-    }
 
-    // Add current location marker
-    if (currentLocation) {
-      try {
+      // Add current location marker if available
+      if (currentLocation) {
         // Create custom element for pulsing current location
         const currentLocationEl = document.createElement('div')
         currentLocationEl.className = 'current-location-marker'
@@ -179,14 +180,10 @@ export default function MapboxMap({
         bounds.extend([currentLocation.longitude, currentLocation.latitude])
         hasValidCoordinates = true
         addDebugInfo('Current location marker added')
-      } catch (err) {
-        addDebugInfo(`Failed to add current location marker: ${err}`)
       }
-    }
 
-    // Add route line if we have coordinates
-    if (coordinates.length > 1) {
-      try {
+      // Add route line if we have coordinates
+      if (coordinates.length > 1) {
         const routeCoordinates = coordinates.map(coord => [coord.longitude, coord.latitude])
         
         // Remove existing route if it exists
@@ -229,25 +226,28 @@ export default function MapboxMap({
         })
         hasValidCoordinates = true
         addDebugInfo(`Route line added with ${coordinates.length} points`)
-      } catch (err) {
-        addDebugInfo(`Failed to add route line: ${err}`)
       }
-    }
 
-    // Fit bounds if we have valid coordinates
-    if (hasValidCoordinates && !bounds.isEmpty()) {
-      try {
+      // Fit bounds if we have valid coordinates, otherwise center on a default location
+      if (hasValidCoordinates && !bounds.isEmpty()) {
         map.fitBounds(bounds, {
           padding: 50,
           maxZoom: 15
         })
-        addDebugInfo('Map bounds fitted')
-      } catch (err) {
-        addDebugInfo(`Failed to fit bounds: ${err}`)
+        addDebugInfo('Map bounds fitted to content')
+      } else {
+        // Default to Florida if no coordinates
+        map.setCenter([-81.5158, 27.6648]) // Center of Florida
+        map.setZoom(6)
+        addDebugInfo('No coordinates found, centering on Florida')
       }
+
+    } catch (error) {
+      addDebugInfo(`Error adding map content: ${error}`)
+      console.error('Error adding map content:', error)
     }
 
-    addDebugInfo('Map content completed')
+    addDebugInfo('Map content setup completed')
   }, [coordinates, currentLocation, pickupLocation, dropoffLocation, clearMarkers, addDebugInfo])
 
   // Initialize map
@@ -257,44 +257,60 @@ export default function MapboxMap({
       return
     }
 
-    if (!MAPBOX_ACCESS_TOKEN || MAPBOX_ACCESS_TOKEN.includes('xxxxxxxxx')) {
-      addDebugInfo('Invalid access token detected')
-      setError('Please set a valid Mapbox access token in your environment variables')
+    // Check if Mapbox token is available
+    if (!MAPBOX_ACCESS_TOKEN) {
+      addDebugInfo('No Mapbox access token found')
+      setError('Mapbox access token is missing. Please add NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN to your environment variables.')
+      setIsLoading(false)
+      return
+    }
+
+    // Wait for token validation if it's still pending
+    if (tokenValid === null) {
+      addDebugInfo('Waiting for token validation...')
+      setTimeout(() => initializeMap(), 1000)
+      return
+    }
+
+    if (tokenValid === false) {
+      addDebugInfo('Token validation failed, cannot initialize map')
+      setError('Mapbox access token is invalid. Please check your token in the environment variables.')
       setIsLoading(false)
       return
     }
 
     try {
-      addDebugInfo('Starting map initialization...')
+      addDebugInfo('Starting map initialization with validated token')
+      
+      // Set the access token
+      mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
       
       // Check container dimensions
       const containerRect = mapRef.current.getBoundingClientRect()
       addDebugInfo(`Container size: ${containerRect.width}x${containerRect.height}`)
       
       if (containerRect.width === 0 || containerRect.height === 0) {
-        throw new Error('Container has zero dimensions')
+        // Wait a bit and try again
+        setTimeout(() => {
+          const newRect = mapRef.current?.getBoundingClientRect()
+          if (newRect && newRect.width > 0 && newRect.height > 0) {
+            addDebugInfo(`Container resized to: ${newRect.width}x${newRect.height}`)
+            initializeMap()
+          } else {
+            setError('Map container has zero dimensions. Please check the container styling.')
+            setIsLoading(false)
+          }
+        }, 1000)
+        return
       }
 
-      // Determine center
-      let center: [number, number] = [-81.3792, 28.5383] // Default to Orlando
-      
-      if (currentLocation) {
-        center = [currentLocation.longitude, currentLocation.latitude]
-        addDebugInfo(`Using current location as center: ${center}`)
-      } else if (pickupLocation?.latitude && pickupLocation?.longitude) {
-        center = [parseFloat(pickupLocation.longitude), parseFloat(pickupLocation.latitude)]
-        addDebugInfo(`Using pickup location as center: ${center}`)
-      } else {
-        addDebugInfo(`Using default center: ${center}`)
-      }
-
-      // Create map
+      // Create map with default center
       addDebugInfo('Creating Mapbox map instance...')
       const map = new mapboxgl.Map({
         container: mapRef.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center,
-        zoom: 10,
+        center: [-81.5158, 27.6648], // Default to center of Florida
+        zoom: 6,
         attributionControl: false
       })
 
@@ -312,14 +328,25 @@ export default function MapboxMap({
 
       map.on('error', (e) => {
         addDebugInfo(`Map error: ${e.error?.message || 'Unknown error'}`)
+        console.error('Mapbox error:', e)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
+      })
+
+      map.on('styledata', () => {
+        addDebugInfo('Map style loaded')
+      })
+
+      map.on('sourcedata', (e) => {
+        if (e.isSourceLoaded) {
+          addDebugInfo(`Source loaded: ${e.sourceId}`)
+        }
       })
 
       // Timeout fallback
       setTimeout(() => {
         if (isLoading) {
-          addDebugInfo('Map load timeout - forcing completion')
+          addDebugInfo('Map load timeout - setting as loaded anyway')
           if (map && !mapInstanceRef.current) {
             mapInstanceRef.current = map
             addMapContent(map)
@@ -327,24 +354,26 @@ export default function MapboxMap({
             setIsLoading(false)
           }
         }
-      }, 10000) // 10 second timeout
+      }, 15000) // 15 second timeout
 
     } catch (err) {
       addDebugInfo(`Initialization error: ${err}`)
+      console.error('Map initialization error:', err)
       setError(err instanceof Error ? err.message : 'Unknown initialization error')
       setIsLoading(false)
     }
-  }, [mounted, currentLocation, pickupLocation, dropoffLocation, addMapContent, addDebugInfo, isLoading])
+  }, [mounted, addMapContent, addDebugInfo, isLoading, MAPBOX_ACCESS_TOKEN, tokenValid])
 
-  // Initialize when mounted
+  // Initialize when mounted and token is validated
   useEffect(() => {
     if (!mounted) return
 
     addDebugInfo('Component ready - starting initialization')
     
+    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       initializeMap()
-    }, 500)
+    }, 100)
 
     return () => {
       clearTimeout(timer)
@@ -383,14 +412,15 @@ export default function MapboxMap({
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5DBE62] mx-auto mb-4"></div>
           <p className="text-gray-600 text-sm mb-4">Loading Mapbox...</p>
           
-          {/* Debug info */}
+          {/* Enhanced debug info for loading state */}
           <div className="bg-gray-50 rounded p-3 text-xs text-left max-w-sm">
             <div className="font-semibold mb-2">Debug Info:</div>
             {debugInfo.map((info, idx) => (
               <div key={idx} className="text-gray-600">{info}</div>
             ))}
             <div className="mt-2 pt-2 border-t border-gray-200">
-              <div>Token: {MAPBOX_ACCESS_TOKEN ? '✅ Present' : '❌ Missing'}</div>
+              <div>Token: {MAPBOX_ACCESS_TOKEN ? `✅ ${MAPBOX_ACCESS_TOKEN.substring(0, 10)}...` : '❌ Missing'}</div>
+              <div>Token Valid: {tokenValid === null ? '⏳ Testing...' : tokenValid ? '✅ Yes' : '❌ No'}</div>
               <div>Container: {mapRef.current ? '✅ Found' : '❌ Missing'}</div>
               <div>Mounted: {mounted ? '✅ Yes' : '❌ No'}</div>
             </div>
@@ -407,12 +437,29 @@ export default function MapboxMap({
           <div className="text-red-500 text-xl mb-2">⚠️</div>
           <p className="text-red-600 text-sm mb-4">{error}</p>
           
-          {/* Debug info for error state */}
+          {/* Enhanced debug info for error state */}
           <div className="bg-red-50 rounded p-3 text-xs text-left mb-4">
             <div className="font-semibold mb-2 text-red-800">Debug Info:</div>
             {debugInfo.map((info, idx) => (
               <div key={idx} className="text-red-700">{info}</div>
             ))}
+            <div className="mt-2 pt-2 border-t border-red-200">
+              <div>Token: {MAPBOX_ACCESS_TOKEN ? `✅ ${MAPBOX_ACCESS_TOKEN.substring(0, 10)}...` : '❌ Missing'}</div>
+              <div>Token Valid: {tokenValid === null ? '⏳ Testing...' : tokenValid ? '✅ Yes' : '❌ No'}</div>
+              <div>Has coordinates: {coordinates.length > 0 ? '✅ Yes' : '❌ No'}</div>
+              <div>Has current location: {currentLocation ? '✅ Yes' : '❌ No'}</div>
+              <div>Environment: {process.env.NODE_ENV}</div>
+            </div>
+            
+            {/* Test token button */}
+            <div className="mt-2 pt-2 border-t border-red-200">
+              <button
+                onClick={() => testMapboxToken(MAPBOX_ACCESS_TOKEN)}
+                className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+              >
+                Re-test Token
+              </button>
+            </div>
           </div>
           
           <button
@@ -420,6 +467,7 @@ export default function MapboxMap({
               setError(null)
               setIsLoading(true)
               setDebugInfo([])
+              setTokenValid(null)
               setTimeout(initializeMap, 100)
             }}
             className="bg-[#5DBE62] text-white px-4 py-2 rounded text-sm"
@@ -479,9 +527,10 @@ export default function MapboxMap({
         </div>
       </div>
 
-      {/* Enhanced status indicator with debug info */}
+      {/* Enhanced status indicator */}
       <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 text-gray-800 p-2 rounded text-xs z-10 border max-w-xs">
         <div>Status: {mapInstanceRef.current ? '✅ Loaded' : '⏳ Loading'}</div>
+        <div>Token: {tokenValid === null ? '⏳ Testing...' : tokenValid ? '✅ Valid' : '❌ Invalid'}</div>
         <div>Markers: {markersRef.current.length}</div>
         <div>Coordinates: {coordinates.length}</div>
         {debugInfo.length > 0 && (
