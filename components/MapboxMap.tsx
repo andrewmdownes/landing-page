@@ -41,7 +41,7 @@ export default function MapboxMap({
   const [tokenValid, setTokenValid] = useState<boolean | null>(null)
 
   // Get the access token
-  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoicmliaXQ0MiIsImEiOiJjbWMzc2JyOXYwODRuMmtvaWR1dWJjNDVyIn0.CYHEuFkok2cF-N-XxX2PGA'
+  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
 
   // Debug function to log information
   const addDebugInfo = useCallback((info: string) => {
@@ -285,23 +285,39 @@ export default function MapboxMap({
       // Set the access token
       mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
       
+      // Force container to have dimensions if needed
+      if (mapRef.current) {
+        mapRef.current.style.width = '100%'
+        mapRef.current.style.height = '100%'
+        mapRef.current.style.minHeight = '400px'
+        
+        // Wait a brief moment for the DOM to update
+        await new Promise(resolve => setTimeout(resolve, 50))
+      }
+      
       // Check container dimensions
       const containerRect = mapRef.current.getBoundingClientRect()
       addDebugInfo(`Container size: ${containerRect.width}x${containerRect.height}`)
       
       if (containerRect.width === 0 || containerRect.height === 0) {
-        // Wait a bit and try again
+        addDebugInfo('Container has zero dimensions, retrying...')
+        // Wait longer and try again
         setTimeout(() => {
-          const newRect = mapRef.current?.getBoundingClientRect()
-          if (newRect && newRect.width > 0 && newRect.height > 0) {
-            addDebugInfo(`Container resized to: ${newRect.width}x${newRect.height}`)
-            initializeMap()
-          } else {
-            setError('Map container has zero dimensions. Please check the container styling.')
-            setIsLoading(false)
+          if (mapRef.current) {
+            const newRect = mapRef.current.getBoundingClientRect()
+            addDebugInfo(`Retry - Container size: ${newRect.width}x${newRect.height}`)
+            if (newRect && newRect.width > 0 && newRect.height > 0) {
+              addDebugInfo('Container now has valid dimensions')
+              initializeMap()
+            } else {
+              addDebugInfo('Container still has zero dimensions, proceeding anyway')
+              // Proceed with map creation even with zero dimensions
+              // The map will resize once the container gets proper dimensions
+            }
           }
-        }, 1000)
-        return
+        }, 2000)
+        
+        // Don't return here - continue with map creation
       }
 
       // Create map with default center
@@ -503,7 +519,8 @@ export default function MapboxMap({
         style={{ 
           minHeight: '400px',
           width: '100%',
-          height: '100%'
+          height: '100%',
+          position: 'relative'
         }}
       />
       
