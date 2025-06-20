@@ -41,7 +41,7 @@ export default function MapboxMap({
   const [tokenValid, setTokenValid] = useState<boolean | null>(null)
 
   // Get the access token
-  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoicmliaXQ0MiIsImEiOiJjbWMzc2JyOXYwODRuMmtvaWR1dWJjNDVyIn0.CYHEuFkok2cF-N-XxX2PGA'
+  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
 
   // Debug function to log information
   const addDebugInfo = useCallback((info: string) => {
@@ -252,8 +252,15 @@ export default function MapboxMap({
 
   // Initialize map
   const initializeMap = useCallback(async () => {
-    if (!mounted || !mapRef.current) {
-      addDebugInfo('Not ready - waiting for mount/container')
+    addDebugInfo(`Init check: mounted=${mounted}, hasContainer=${!!mapRef.current}`)
+    
+    if (!mounted) {
+      addDebugInfo('Not mounted yet')
+      return
+    }
+    
+    if (!mapRef.current) {
+      addDebugInfo('Container ref is null, waiting...')
       return
     }
 
@@ -290,6 +297,7 @@ export default function MapboxMap({
         mapRef.current.style.width = '100%'
         mapRef.current.style.height = '100%'
         mapRef.current.style.minHeight = '400px'
+        mapRef.current.style.position = 'relative'
         
         // Wait a brief moment for the DOM to update
         await new Promise(resolve => setTimeout(resolve, 50))
@@ -299,28 +307,7 @@ export default function MapboxMap({
       const containerRect = mapRef.current.getBoundingClientRect()
       addDebugInfo(`Container size: ${containerRect.width}x${containerRect.height}`)
       
-      if (containerRect.width === 0 || containerRect.height === 0) {
-        addDebugInfo('Container has zero dimensions, retrying...')
-        // Wait longer and try again
-        setTimeout(() => {
-          if (mapRef.current) {
-            const newRect = mapRef.current.getBoundingClientRect()
-            addDebugInfo(`Retry - Container size: ${newRect.width}x${newRect.height}`)
-            if (newRect && newRect.width > 0 && newRect.height > 0) {
-              addDebugInfo('Container now has valid dimensions')
-              initializeMap()
-            } else {
-              addDebugInfo('Container still has zero dimensions, proceeding anyway')
-              // Proceed with map creation even with zero dimensions
-              // The map will resize once the container gets proper dimensions
-            }
-          }
-        }, 2000)
-        
-        // Don't return here - continue with map creation
-      }
-
-      // Create map with default center
+      // Create map regardless of dimensions (it will resize automatically)
       addDebugInfo('Creating Mapbox map instance...')
       const map = new mapboxgl.Map({
         container: mapRef.current,
@@ -386,13 +373,21 @@ export default function MapboxMap({
 
     addDebugInfo('Component ready - starting initialization')
     
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      initializeMap()
-    }, 100)
+    // Wait for container to be available in DOM
+    const waitForContainer = () => {
+      if (mapRef.current) {
+        addDebugInfo('Container found, initializing map')
+        initializeMap()
+      } else {
+        addDebugInfo('Container not ready, retrying in 100ms')
+        setTimeout(waitForContainer, 100)
+      }
+    }
+    
+    // Start checking for container
+    setTimeout(waitForContainer, 50)
 
     return () => {
-      clearTimeout(timer)
       if (mapInstanceRef.current) {
         addDebugInfo('Cleaning up map instance')
         mapInstanceRef.current.remove()
@@ -437,7 +432,8 @@ export default function MapboxMap({
             <div className="mt-2 pt-2 border-t border-gray-200">
               <div>Token: {MAPBOX_ACCESS_TOKEN ? `✅ ${MAPBOX_ACCESS_TOKEN.substring(0, 10)}...` : '❌ Missing'}</div>
               <div>Token Valid: {tokenValid === null ? '⏳ Testing...' : tokenValid ? '✅ Yes' : '❌ No'}</div>
-              <div>Container: {mapRef.current ? '✅ Found' : '❌ Missing'}</div>
+              <div>Container Ref: {mapRef.current ? '✅ Found' : '❌ Missing'}</div>
+              <div>Container Dimensions: {mapRef.current ? `${mapRef.current.getBoundingClientRect().width}x${mapRef.current.getBoundingClientRect().height}` : 'N/A'}</div>
               <div>Mounted: {mounted ? '✅ Yes' : '❌ No'}</div>
             </div>
           </div>
@@ -462,6 +458,8 @@ export default function MapboxMap({
             <div className="mt-2 pt-2 border-t border-red-200">
               <div>Token: {MAPBOX_ACCESS_TOKEN ? `✅ ${MAPBOX_ACCESS_TOKEN.substring(0, 10)}...` : '❌ Missing'}</div>
               <div>Token Valid: {tokenValid === null ? '⏳ Testing...' : tokenValid ? '✅ Yes' : '❌ No'}</div>
+              <div>Container Ref: {mapRef.current ? '✅ Found' : '❌ Missing'}</div>
+              <div>Container Dimensions: {mapRef.current ? `${mapRef.current.getBoundingClientRect().width}x${mapRef.current.getBoundingClientRect().height}` : 'N/A'}</div>
               <div>Has coordinates: {coordinates.length > 0 ? '✅ Yes' : '❌ No'}</div>
               <div>Has current location: {currentLocation ? '✅ Yes' : '❌ No'}</div>
               <div>Environment: {process.env.NODE_ENV}</div>
@@ -548,6 +546,7 @@ export default function MapboxMap({
       <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 text-gray-800 p-2 rounded text-xs z-10 border max-w-xs">
         <div>Status: {mapInstanceRef.current ? '✅ Loaded' : '⏳ Loading'}</div>
         <div>Token: {tokenValid === null ? '⏳ Testing...' : tokenValid ? '✅ Valid' : '❌ Invalid'}</div>
+        <div>Container: {mapRef.current ? '✅ Found' : '❌ Missing'}</div>
         <div>Markers: {markersRef.current.length}</div>
         <div>Coordinates: {coordinates.length}</div>
         {debugInfo.length > 0 && (
