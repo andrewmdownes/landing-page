@@ -1,5 +1,5 @@
 {
-  "name": "landing-page",
+  "name": "ribit-landing-and-api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
+    "stripe": "^18.2.0",
     "framer-motion": "^12.18.1",
     "lucide-react": "^0.515.0",
     "mapbox-gl": "^3.7.0",
