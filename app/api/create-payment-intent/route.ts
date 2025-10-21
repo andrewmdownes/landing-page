@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount),
       currency,
-      payment_method_types: ['card', 'apple_pay'],
+      payment_method_types: ['card'],
       description: description || `Ribit ride booking - ${seats} seat(s)`,
       metadata: {
         email: email || '',
