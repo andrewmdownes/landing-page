@@ -9,7 +9,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: NextRequest) {
   
   try {
-    console.log('💰 Payment Intent Route hit. Key mode:', process.env.STRIPE_SECRET_KEY?.startsWith('sk_live') ? 'LIVE' : 'TEST');
+    const keyPrefix = process.env.STRIPE_SECRET_KEY?.substring(0, 7) || 'MISSING';
+    console.log('🔑 ACTUAL KEY PREFIX USED:', keyPrefix);
     const { 
       amount = 1099, 
       currency = 'usd', 
