@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: NextRequest) {
   
   try {
-    const keyPrefix = process.env.STRIPE_SECRET_KEY?.substring(0, 7) || 'MISSING';
+    const keyPrefix = process.env.STRIPE_SECRET_KEY?.substring(0, 15) || 'MISSING';
     console.log('🔑 ACTUAL KEY PREFIX USED:', keyPrefix);
     const { 
       amount = 1099, 
