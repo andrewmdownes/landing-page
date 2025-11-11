@@ -45,10 +45,10 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4" id="important-legal-notice">Important Legal Notice</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Ribit is a cost‑sharing ride coordination platform, not a Transportation Network Company ("TNC"). Under Florida law, a "prearranged ride" for TNC purposes does not include ridesharing, carpooling, or any other service in which the driver's fee does not exceed the driver's cost to provide the ride. Ribit facilitates cost‑sharing between drivers and riders; drivers on Ribit must not earn more than their reasonable pro‑rata costs for a trip. As such, Ribit is not a TNC and is not subject to Florida's TNC‑specific statutes that apply to Uber/Lyft‑style for‑hire transportation.
+              Ribit is a cost‑sharing ride coordination platform, not a Transportation Network Company (&ldquo;TNC&rdquo;). Under Florida law, a &ldquo;prearranged ride&rdquo; for TNC purposes does not include ridesharing, carpooling, or any other service in which the driver&rsquo;s fee does not exceed the driver&rsquo;s cost to provide the ride. Ribit facilitates cost‑sharing between drivers and riders; drivers on Ribit must not earn more than their reasonable pro‑rata costs for a trip. As such, Ribit is not a TNC and is not subject to Florida&rsquo;s TNC‑specific statutes that apply to Uber/Lyft‑style for‑hire transportation.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              By using the Ribit mobile application (the "Application") and related services (collectively, the "Services"), you agree to these Terms of Service (the "Terms"). If you do not agree, do not use the Application.
+              By using the Ribit mobile application (the &ldquo;Application&rdquo;) and related services (collectively, the &ldquo;Services&rdquo;), you agree to these Terms of Service (the &ldquo;Terms&rdquo;). If you do not agree, do not use the Application.
             </p>
             <p className="text-gray-700 leading-relaxed">
               You must be at least 18 years old to use Ribit.
@@ -58,16 +58,16 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4" id="what-ribit-is">1. What Ribit Is (and Is Not)</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              <strong>1.1</strong> Ribit connects individuals to coordinate shared trips where riders contribute toward a driver's costs (e.g., fuel, tolls, parking, routine wear). Ribit is not a common carrier, taxicab, livery, charter, or for‑hire transportation provider.
+              <strong>1.1</strong> Ribit connects individuals to coordinate shared trips where riders contribute toward a driver&rsquo;s costs (e.g., fuel, tolls, parking, routine wear). Ribit is not a common carrier, taxicab, livery, charter, or for‑hire transportation provider.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              <strong>1.2</strong> Drivers are private individuals using their personal vehicles and personal insurance. Drivers are independent users and are not employees, agents, representatives, or contractors of Ribit. Ribit does not supervise, control, or direct drivers' operations, schedules, routes, or conduct. Each driver is solely responsible for maintaining adequate insurance, complying with all applicable laws, and ensuring vehicle safety.
+              <strong>1.2</strong> Drivers are private individuals using their personal vehicles and personal insurance. Drivers are independent users and are not employees, agents, representatives, or contractors of Ribit. Ribit does not supervise, control, or direct drivers&rsquo; operations, schedules, routes, or conduct. Each driver is solely responsible for maintaining adequate insurance, complying with all applicable laws, and ensuring vehicle safety.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               <strong>1.3 Cost‑Share Rule.</strong> Drivers may only receive contributions that do not exceed their reasonable costs for a given trip. Examples include fuel, tolls, parking, and reasonable per‑mile cost of vehicle operation. Drivers must not profit from trips, set surge pricing, or operate as for‑hire transportation.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              <strong>1.4 No TNC Status.</strong> Because contributions are capped at cost, Ribit and its users are not engaged in TNC "prearranged rides." TNC‑specific requirements (e.g., TNC background checks, TNC vehicle inspections, TNC commercial insurance minimums) do not apply to Ribit's cost‑sharing trips. This does not eliminate normal obligations under general traffic, insurance, and safety laws that apply to all motorists.
+              <strong>1.4 No TNC Status.</strong> Because contributions are capped at cost, Ribit and its users are not engaged in TNC &ldquo;prearranged rides.&rdquo; TNC‑specific requirements (e.g., TNC background checks, TNC vehicle inspections, TNC commercial insurance minimums) do not apply to Ribit&rsquo;s cost‑sharing trips. This does not eliminate normal obligations under general traffic, insurance, and safety laws that apply to all motorists.
             </p>
           </section>
 
@@ -109,7 +109,7 @@ export default function TermsOfService() {
               <strong>4.1 Shared Cost.</strong> Riders contribute toward trip costs displayed in the Application.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              <strong>4.2 Conduct.</strong> Be punctual, respectful, and comply with safety requirements (seat belts, no open containers, etc.). Riders are responsible for any damage to the driver's vehicle or property caused by their actions or negligence.
+              <strong>4.2 Conduct.</strong> Be punctual, respectful, and comply with safety requirements (seat belts, no open containers, etc.). Riders are responsible for any damage to the driver&rsquo;s vehicle or property caused by their actions or negligence.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               <strong>4.3 Personal Items.</strong> You are responsible for your belongings; Ribit is not liable for loss/damage.
@@ -137,7 +137,7 @@ export default function TermsOfService() {
               <strong>5.4 Payment Disputes and Chargebacks.</strong> You agree not to initiate chargebacks or payment disputes for authorized transactions. Unauthorized chargebacks or false payment disputes may result in immediate account termination and liability for all costs, fees, and damages incurred by Ribit. If a chargeback or payment dispute results in a loss to Ribit or a driver, you agree to reimburse all amounts, plus administrative fees and costs. Ribit reserves the right to withhold payments, suspend accounts, or take legal action to recover losses from fraudulent disputes.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              <strong>5.5 Payment Processing Disclaimer.</strong> Ribit uses third‑party payment processors and is not responsible for payment processing errors, delays, failures, or disputes between users and payment processors. You agree that payment processors' terms govern the processing of payments.
+              <strong>5.5 Payment Processing Disclaimer.</strong> Ribit uses third‑party payment processors and is not responsible for payment processing errors, delays, failures, or disputes between users and payment processors. You agree that payment processors&rsquo; terms govern the processing of payments.
             </p>
           </section>
 
@@ -157,7 +157,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4" id="disclaimers-allocation-risk">7. Disclaimers and Allocation of Risk</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              <strong>7.1 No Warranty.</strong> The Services are provided "as is" and "as available." Ribit disclaims implied warranties of merchantability, fitness for a particular purpose, and non‑infringement.
+              <strong>7.1 No Warranty.</strong> The Services are provided &ldquo;as is&rdquo; and &ldquo;as available.&rdquo; Ribit disclaims implied warranties of merchantability, fitness for a particular purpose, and non‑infringement.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               <strong>7.2 Third‑Party Content.</strong> Ribit is not responsible for user content or third‑party links.
@@ -173,10 +173,10 @@ export default function TermsOfService() {
               <strong>8.1 Limitation.</strong> To the maximum extent allowed by law, Ribit and its affiliates will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              <strong>8.2 Cap.</strong> To the extent not prohibited by law, Ribit's aggregate liability will not exceed the greater of $100 or the amounts paid by you to Ribit for Services in the 12 months preceding the claim.
+              <strong>8.2 Cap.</strong> To the extent not prohibited by law, Ribit&rsquo;s aggregate liability will not exceed the greater of $100 or the amounts paid by you to Ribit for Services in the 12 months preceding the claim.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              <strong>8.3 Indemnity.</strong> You agree to indemnify, defend, and hold harmless Ribit, its affiliates, officers, directors, employees, and agents from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or relating to: (a) your use of the Services; (b) your conduct as a driver or rider; (c) any trip you participate in; (d) your breach of these Terms or violation of any law; (e) any accident, injury, or property damage occurring during a trip; (f) your insurance coverage or lack thereof; or (g) any dispute between you and another user.
+              <strong>8.3 Indemnity.</strong> You agree to indemnify, defend, and hold harmless Ribit, its affiliates, officers, directors, employees, and agents from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys&rsquo; fees) arising out of or relating to: (a) your use of the Services; (b) your conduct as a driver or rider; (c) any trip you participate in; (d) your breach of these Terms or violation of any law; (e) any accident, injury, or property damage occurring during a trip; (f) your insurance coverage or lack thereof; or (g) any dispute between you and another user.
             </p>
           </section>
 
@@ -222,7 +222,7 @@ export default function TermsOfService() {
               <strong>12.2 Binding Arbitration.</strong> If informal resolution fails, you agree that any dispute, claim, or controversy arising out of or relating to these Terms or the Services shall be resolved by binding arbitration administered by the American Arbitration Association (AAA) under its Consumer Arbitration Rules, rather than in court. The arbitration will be conducted in Gainesville, Florida, or remotely by video conference.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              <strong>12.3 Class Action Waiver.</strong> YOU AND RIBIT AGREE THAT EACH MAY BRING CLAIMS AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE ACTION. The arbitrator may not consolidate more than one person's claims and may not preside over any form of representative or class proceeding.
+              <strong>12.3 Class Action Waiver.</strong> YOU AND RIBIT AGREE THAT EACH MAY BRING CLAIMS AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE ACTION. The arbitrator may not consolidate more than one person&rsquo;s claims and may not preside over any form of representative or class proceeding.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               <strong>12.4 Exceptions.</strong> Either party may seek injunctive relief in court for: (a) intellectual property infringement; (b) unauthorized access to the Services; or (c) violations of these Terms that threaten safety or security.

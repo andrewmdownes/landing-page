@@ -3,6 +3,7 @@
 
 import { motion } from 'framer-motion'
 import { Shield, Users, Clock, DollarSign, Car, MapPin } from 'lucide-react'
+import Link from 'next/link'
 import EmailSignup from '../components/EmailSignup'
 
 export default function LandingPage() {

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowLeft, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 
 export default function CostSharingPolicy() {
   return (
@@ -90,7 +90,7 @@ export default function CostSharingPolicy() {
               </div>
               <ul className="list-disc list-inside space-y-2 text-gray-700 ml-9">
                 <li>Charge more than 70 cents per mile</li>
-                <li>Add "convenience fees" or surcharges</li>
+                <li>Add &ldquo;convenience fees&rdquo; or surcharges</li>
                 <li>Use surge pricing or dynamic pricing</li>
                 <li>Charge booking fees to riders</li>
                 <li>Profit from rides</li>
