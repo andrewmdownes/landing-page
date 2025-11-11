@@ -374,9 +374,20 @@ export default function LandingPage() {
       <footer className="py-8 bg-gray-900 text-white">
         <div className="container mx-auto px-4 text-center">
           <p className="text-xl font-bold mb-2">Ribit</p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm mb-4">
             Community-based ridesharing for affordable medium-distance travel
           </p>
+          <nav className="flex justify-center gap-6 mb-4" aria-label="Footer navigation">
+            <Link href="/terms" className="text-gray-400 hover:text-[#5DBE62] transition-colors text-sm">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="text-gray-400 hover:text-[#5DBE62] transition-colors text-sm">
+              Privacy Policy
+            </Link>
+            <Link href="/cost-sharing" className="text-gray-400 hover:text-[#5DBE62] transition-colors text-sm">
+              Cost-Sharing Policy
+            </Link>
+          </nav>
           <p className="text-gray-500 text-xs mt-4">
             © 2025 Ribit Technologies. All rights reserved.
           </p>
