@@ -45,7 +45,7 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4" id="overview">Overview</h2>
             <p className="text-gray-700 leading-relaxed">
-              This Privacy Policy explains how Ribit Technologies, Inc. ("Ribit") collects, uses, discloses, and safeguards information when you use our mobile application and related services (the "Services"). Ribit operates a cost‑sharing rideshare coordination platform and is not a Transportation Network Company (TNC). Because drivers receive contributions that do not exceed the driver's cost for a trip, Ribit's operations are exempt from Florida's TNC‑specific regime. This Privacy Policy applies to all users (drivers and riders) age 18+ located in the United States.
+              This Privacy Policy explains how Ribit Technologies, Inc. (&ldquo;Ribit&rdquo;) collects, uses, discloses, and safeguards information when you use our mobile application and related services (the &ldquo;Services&rdquo;). Ribit operates a cost‑sharing rideshare coordination platform and is not a Transportation Network Company (TNC). Because drivers receive contributions that do not exceed the driver&rsquo;s cost for a trip, Ribit&rsquo;s operations are exempt from Florida&rsquo;s TNC‑specific regime. This Privacy Policy applies to all users (drivers and riders) age 18+ located in the United States.
             </p>
           </section>
 
@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4" id="information-we-collect">Information We Collect</h2>
             <ol className="list-decimal list-inside space-y-3 text-gray-700 leading-relaxed">
               <li><strong>Account Information:</strong> name, email, phone number, date of birth, university affiliation (if provided), profile information.</li>
-              <li><strong>Driver Information</strong> (if you offer rides): vehicle make/model, license plate, car color, driver's license, insurance documents, vehicle registration, payment information (PayPal, Venmo, or Zelle), and other details you choose to provide.</li>
+              <li><strong>Driver Information</strong> (if you offer rides): vehicle make/model, license plate, car color, driver&rsquo;s license, insurance documents, vehicle registration, payment information (PayPal, Venmo, or Zelle), and other details you choose to provide.</li>
               <li><strong>Trip and Transaction Data:</strong> trip origin/destination areas, dates/times, contribution amounts, payments, payout identifiers.</li>
               <li><strong>Communications:</strong> messages sent via the app and communications with support.</li>
               <li><strong>Device/Usage Data:</strong> IP address, device identifiers, app events, and diagnostic logs.</li>
@@ -75,14 +75,14 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4" id="cost-sharing-transparency">Cost‑Sharing and Transparency</h2>
             <p className="text-gray-700 leading-relaxed">
-              To preserve Ribit's non‑TNC status, Ribit may display or store cost‑share calculations and parameters (e.g., per‑mile estimates, tolls/parking) and retain records of contribution amounts to demonstrate that driver receipts do not exceed reasonable trip cost. Ribit may collect and review driver documents (including insurance, license, and registration) for platform integrity, but such review does not constitute verification, endorsement, or guarantee of insurance coverage, driver qualifications, or vehicle safety.
+              To preserve Ribit&rsquo;s non‑TNC status, Ribit may display or store cost‑share calculations and parameters (e.g., per‑mile estimates, tolls/parking) and retain records of contribution amounts to demonstrate that driver receipts do not exceed reasonable trip cost. Ribit may collect and review driver documents (including insurance, license, and registration) for platform integrity, but such review does not constitute verification, endorsement, or guarantee of insurance coverage, driver qualifications, or vehicle safety.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4" id="payments">Payments</h2>
             <p className="text-gray-700 leading-relaxed">
-              Ribit uses third‑party payment processors for contributions and payouts. Payment credentials are tokenized and stored by processors, not Ribit. The processors' privacy practices govern their handling of your financial data.
+              Ribit uses third‑party payment processors for contributions and payouts. Payment credentials are tokenized and stored by processors, not Ribit. The processors&rsquo; privacy practices govern their handling of your financial data.
             </p>
           </section>
 
