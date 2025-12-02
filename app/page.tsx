@@ -4,7 +4,7 @@
 import { motion } from 'framer-motion'
 import { Shield, Users, Clock, DollarSign, Car, MapPin } from 'lucide-react'
 import Link from 'next/link'
-import EmailSignup from '../components/EmailSignup'
+import AppDownload from '../components/AppDownload'
 
 export default function LandingPage() {
   return (
@@ -79,7 +79,7 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            <EmailSignup />
+            <AppDownload />
             
             {/* Trust Indicators */}
             <motion.div 
@@ -363,9 +363,12 @@ export default function LandingPage() {
                 Ready to Save on Your Next Trip?
               </h2>
               <p className="text-lg md:text-xl mb-8 text-white/95">
-                
+                Download Ribit now and join the verified university community
               </p>
-              <EmailSignup variant="white" />
+              <AppDownload 
+                variant="white" 
+                buttonColor="#88C5A3"
+              />
             </div>
           </motion.div>
         </div>
