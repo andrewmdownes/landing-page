@@ -3,8 +3,9 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import Image from 'next/image'
-import { AiOutlineApple } from "react-icons/ai";
+import { QRCodeSVG } from 'qrcode.react'
+import { AiOutlineApple } from "react-icons/ai"
+import { useState, useEffect } from 'react'
 
 
 interface AppDownloadProps {
@@ -18,6 +19,17 @@ interface AppDownloadProps {
 
 export default function AppDownload({ variant = 'default', buttonGradient, buttonColor }: AppDownloadProps) {
   const isWhite = variant === 'white'
+  const [qrSize, setQrSize] = useState(160)
+  
+  // Handle responsive QR code size
+  useEffect(() => {
+    const updateQrSize = () => {
+      setQrSize(window.innerWidth >= 640 ? 160 : 140)
+    }
+    updateQrSize()
+    window.addEventListener('resize', updateQrSize)
+    return () => window.removeEventListener('resize', updateQrSize)
+  }, [])
   
   // Use solid color if provided, otherwise use gradient
   const useSolidColor = !!buttonColor
@@ -60,13 +72,12 @@ export default function AppDownload({ variant = 'default', buttonGradient, butto
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex-shrink-0 flex flex-col items-center"
         >
-          <div className="relative w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] mb-0">
-            <Image
-              src="/ios_download_qr_code.svg"
-              alt="QR Code to download Ribit on the App Store"
-              fill
-              className="rounded-lg"
-              priority
+          <div className="w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] mb-0 flex items-center justify-center bg-white p-2 rounded-lg">
+            <QRCodeSVG
+              value="https://www.ribit.tech/"
+              size={qrSize}
+              level="H"
+              includeMargin={false}
             />
           </div>
           <p className="text-xs text-gray-500 font-medium">Scan to download</p>
